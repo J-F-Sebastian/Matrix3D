@@ -1,0 +1,35 @@
+/* CUBE */
+
+struct m3d_input_point cube[] = {    /* first square, y coords positive */
+    {{ 100.0, 100.0, 100.0, 1.0}},
+    {{ 100.0, 100.0,-100.0, 1.0}},
+    {{-100.0, 100.0,-100.0, 1.0}},
+    {{-100.0, 100.0, 100.0, 1.0}},
+    /* second square, y coords negative */
+    {{ 100.0,-100.0, 100.0, 1.0}},
+    {{ 100.0,-100.0,-100.0, 1.0}},
+    {{-100.0,-100.0,-100.0, 1.0}},
+    {{-100.0,-100.0, 100.0, 1.0}}
+};
+
+/* six faces, starting from first square, going counterclockwise, then up and down */
+struct m3d_input_trimesh cubemesh[] = {
+    /*face 1*/
+    {{0, 1, 2}},
+    {{2, 3, 0}},
+    /*face 2*/
+    {{2, 6, 7}},
+    {{7, 3, 2}},
+    /*face 3*/
+    {{6, 5, 7}},
+    {{5, 4, 7}},
+    /*face 4*/
+    {{0, 5, 1}},
+    {{0, 4, 5}},
+    /*face 5*/
+    {{7, 4, 0}},
+    {{0, 3, 7}},
+    /*face 6*/
+    {{6, 2, 5}},
+    {{2, 1, 5}}
+};
