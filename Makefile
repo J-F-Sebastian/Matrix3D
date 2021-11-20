@@ -1,8 +1,8 @@
 .PHONY: all clean
 
 OBJDIR := build
-CXXFLAGS += -I E:\temp\DiegOS-GUI\SDL\include\SDL2 -Wall -Wextra -O2 -g -march=core2 -msse3
-CFLAGS += -Wall -Wextra -O2 -g
+CXXFLAGS += -I E:\temp\DiegOS-GUI\SDL\include\SDL2 -Wall -Wextra -O2 -g -march=core2 -std=c++14
+CFLAGS += -Wall -Wextra -O2 -g -march=core2
 CC = gcc
 
 MATRIX3D = m3d_display.o m3d_world.o m3d_vertex.o m3d_renderer.o m3d_object.o m3d_math.o m3d_light_source.o m3d_color.o m3d_camera.o main.o
