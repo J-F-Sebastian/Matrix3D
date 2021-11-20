@@ -428,13 +428,23 @@ public:
     m3d_frustum(const float angle, const int xres, const int yres);
 };
 
+/*
+ * Interpolation classes
+ *
+ */
+
+/*
+ * Linear interpolation for single values.
+ * 
+ * val(N) = val1 + N*val2/steps
+ */
+
 class m3d_interp_step
 {
 public:
-    m3d_interp_step(float steps, float val1, float val2)
+    m3d_interp_step(int steps, float val1, float val2) : steps(steps), val(val1)
     {
-        val = val1;
-        delta = (steps != 0.0f) ? (val2 - val1) / steps : 0.0f;
+        delta = (steps) ? (val2 - val1) / (float)steps : 0.0f;
     }
 
     float get_val(void)
@@ -449,7 +459,11 @@ public:
 
     void step(void)
     {
-        val += delta;
+        if (steps)
+        {
+            val += delta;
+            steps--;
+        }
     }
 
     float get_delta(void)
@@ -457,19 +471,31 @@ public:
         return delta;
     }
 
+    bool last_step(void)
+    {
+        return (steps) ? false : true;
+    }
+
 private:
+    int steps;
     float val, delta;
 };
+
+/*
+ * Linear interpolation for reciprocal of single values.
+ * 
+ * val(N) = 1/val1 + N*(1/val2)/steps
+ */
 
 class m3d_reciprocal_interp_step
 {
 public:
-    m3d_reciprocal_interp_step(float steps, float val1, float val2)
+    m3d_reciprocal_interp_step(int steps, float val1, float val2) : steps(steps)
     {
-        if (steps != 0.0f)
+        if (steps)
         {
             val = 1.0f / val1;
-            delta = (1.0f / val2 - 1.0f / val1) / steps;
+            delta = (1.0f / val2 - 1.0f / val1) / (float)steps;
         }
         else
         {
@@ -485,24 +511,40 @@ public:
 
     void step(void)
     {
-        val += delta;
+        if (steps)
+        {
+            val += delta;
+            steps--;
+        }
+    }
+
+    bool last_step(void)
+    {
+        return (steps) ? false : true;
     }
 
 private:
+    int steps;
     float val, delta;
 };
+
+/*
+ * Reciprocal linear interpolation of single values.
+ * 
+ * val(N)/z(N) = val1/z1 + N*val2/z2/steps
+ * 
+ * val(N) = z(N) * (val1/z1 + N*val2/z2/steps)
+ */
 
 class m3d_reciprocal_z_interp_step
 {
 public:
-    m3d_reciprocal_z_interp_step(float z1, float z2, float steps, float val1 = 1.0f, float val2 = 1.0f)
+    m3d_reciprocal_z_interp_step(int steps, float z1, float z2, float val1 = 1.0f, float val2 = 1.0f) : steps(steps), recipz(1.0f / z1), paramvalue(val1 / z1)
     {
-        paramvalue = val1 / z1;
-        recipz = 1.0f / z1;
         if (steps)
         {
-            deltaparamvalue = (val2 / z2 - val1 / z1) / steps;
-            deltarecipz = (1.0f / z2 - 1.0f / z1) / steps;
+            deltaparamvalue = (val2 / z2 - val1 / z1) / (float)steps;
+            deltarecipz = (1.0f / z2 - 1.0f / z1) / (float)steps;
         }
         else
         {
@@ -532,11 +574,21 @@ public:
 
     void step(void)
     {
-        paramvalue += deltaparamvalue;
-        recipz += deltarecipz;
+        if (steps)
+        {
+            paramvalue += deltaparamvalue;
+            recipz += deltarecipz;
+            steps--;
+        }
+    }
+
+    bool last_step(void)
+    {
+        return (steps) ? false : true;
     }
 
 private:
+    int steps;
     /* reciprocal of Z */
     float recipz;
     float paramvalue;
@@ -544,17 +596,24 @@ private:
     float deltarecipz;
 };
 
+/*
+ * Reciprocal linear interpolation of vectors.
+ * 
+ * vector(N)/z(N) = vector1/z1 + N*vector2/z2/steps
+ * 
+ * vector(N) = z(N) * (vector1/z1 + N*vector1/z2/steps)
+ */
 class m3d_reciprocal_z_interpv_step
 {
 public:
-    m3d_reciprocal_z_interpv_step(float z1, float z2, float steps, m3d_vector &v1, m3d_vector &v2)
+    m3d_reciprocal_z_interpv_step(int steps, float z1, float z2, m3d_vector &v1, m3d_vector &v2) : steps(steps)
     {
         vector = v1;
         vector.myvector[X_C] /= z1;
         vector.myvector[Y_C] /= z1;
         vector.myvector[Z_C] /= z1;
 
-        if (steps != 0.0f)
+        if (steps)
         {
             deltavector = v2;
             deltavector.myvector[X_C] /= z2;
@@ -563,9 +622,9 @@ public:
             // (val2/z2 - val1/z1)
             deltavector.subtract(vector);
             // (val2/z2 - val1/z1)/steps
-            deltavector.myvector[X_C] /= steps;
-            deltavector.myvector[Y_C] /= steps;
-            deltavector.myvector[Z_C] /= steps;
+            deltavector.myvector[X_C] /= (float)steps;
+            deltavector.myvector[Y_C] /= (float)steps;
+            deltavector.myvector[Z_C] /= (float)steps;
         }
         else
         {
@@ -580,9 +639,9 @@ public:
         stepvector.myvector[Z_C] *= z1;
 
         recipz = 1.0f / z1;
-        if (steps != 0.0f)
+        if (steps)
         {
-            deltarecipz = (1.0f / z2 - 1.0f / z1) / steps;
+            deltarecipz = (1.0f / z2 - 1.0f / z1) / (float)steps;
         }
         else
         {
@@ -612,15 +671,25 @@ public:
 
     void step(void)
     {
-        vector.add(deltavector);
-        recipz += deltarecipz;
-        stepvector = vector;
-        stepvector.myvector[X_C] /= recipz;
-        stepvector.myvector[Y_C] /= recipz;
-        stepvector.myvector[Z_C] /= recipz;
+        if (steps)
+        {
+            vector.add(deltavector);
+            recipz += deltarecipz;
+            stepvector = vector;
+            stepvector.myvector[X_C] /= recipz;
+            stepvector.myvector[Y_C] /= recipz;
+            stepvector.myvector[Z_C] /= recipz;
+            steps--;
+        }
+    }
+
+    bool last_step(void)
+    {
+        return (steps) ? false : true;
     }
 
 private:
+    int steps;
     /* reciprocal of Z */
     float recipz;
     m3d_vector vector;
