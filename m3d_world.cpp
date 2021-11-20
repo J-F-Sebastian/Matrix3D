@@ -7,7 +7,13 @@ using namespace std;
 static bool zsortobjects(const m3d_render_object *first,
                          const m3d_render_object *second)
 {
-    return (first->z_sorting < second->z_sorting);
+    return (first->z_sorting < second->z_sorting) ? true : false;
+}
+
+m3d_world::~m3d_world()
+{
+    objects_list.clear();
+    lights_list.clear();
 }
 
 int m3d_world::add_object(m3d_render_object &object)
@@ -49,11 +55,6 @@ void m3d_world::set_ambient_light_intensity(float intensity)
 {
     ambient_light.set_src_intensity(intensity);
 }
-
-//void m3d_world::sort()
-//{
-//objects_list.sort(zsortobjects);
-//}
 
 void m3d_world::sort(list<m3d_render_object *> &objects_list)
 {

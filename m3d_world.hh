@@ -13,7 +13,7 @@ public:
     /** Default constructor */
     m3d_world() : objects_list(), lights_list(), ambient_light(), camera(){};
     /** Default destructor */
-    virtual ~m3d_world(){};
+    ~m3d_world();
 
     m3d_world(const m3d_ambient_light &ambient, const m3d_camera &camera) : objects_list(), lights_list(), ambient_light(ambient), camera(camera){};
 
@@ -22,7 +22,6 @@ public:
     void set_ambient_light(m3d_ambient_light &ambient_light);
     void set_ambient_light_intensity(float intensity);
 
-    //void sort();
     void sort(std::list<m3d_render_object *> &objects_list);
     void print(void);
 
