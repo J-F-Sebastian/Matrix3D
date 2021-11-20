@@ -155,6 +155,29 @@ int main(int argc, char *argv[])
     float stepping = 1.0f;
     time_t chronograph = time(NULL);
 
+    std::cout << "Matrix3D" << std::endl;
+    __builtin_cpu_init();
+    if (__builtin_cpu_is("intel"))
+        std::cout << "running on a Intel CPU." << std::endl;
+    if (__builtin_cpu_is("amd"))
+        std::cout << "running on a AMD CPU." << std::endl;
+    if (__builtin_cpu_supports("mmx"))
+        std::cout << "with MMX instructions." << std::endl;
+    if (__builtin_cpu_supports("sse"))
+        std::cout << "with SSE instructions." << std::endl;
+    if (__builtin_cpu_supports("sse2"))
+        std::cout << "with SSE2 instructions." << std::endl;
+    if (__builtin_cpu_supports("sse3"))
+        std::cout << "with SSE3 instructions." << std::endl;
+    if (__builtin_cpu_supports("ssse3"))
+        std::cout << "with SSSE3 instructions." << std::endl;
+    if (__builtin_cpu_supports("sse4.1"))
+        std::cout << "with SSE4.1 instructions." << std::endl;
+    if (__builtin_cpu_supports("sse4.2"))
+        std::cout << "with SSE4.2 instructions." << std::endl;
+    if (__builtin_cpu_supports("sse4a"))
+        std::cout << "with SSE4A instructions." << std::endl;
+
     renderer[0] = new m3d_renderer_wireframe(&display);
     renderer[1] = new m3d_renderer_flat(&display);
     renderer[2] = new m3d_renderer_flatf(&display);
