@@ -36,10 +36,27 @@ protected:
     //Z buffer
     m3d_zbuffer zbuffer;
 
-    void sort_triangle(struct m3d_renderer_data triangle[]);
+    /*
+     * Sorts an array of 3 points composing a triangle.
+     * Y is the Y on-screen coordinate of the 3 vertices of the triangle.
+     * The triangle is geometrically unchanged, its vetices are sorted in descending order
+     * (top of screen to bottom of screen).
+     * */
+    void sort_triangle(struct m3d_renderer_data trianglep[]);
 
+    /*
+     * Store scanlines into the scanline buffer, starting at position start inside the buffer.
+     * The scanline buffer carries the X coordinates of every linecomposing the polygon
+     * to be filled with horizontal lines (scan lines!).
+     * The Y coordinates are implicitely starting at the lowest y0, i.e. the caller MUST know
+     * the coordinates of the points composing the polygon and how they are sorted.
+     */
     void store_scanlines(int16_t x0, int16_t y0, int16_t x1, int16_t y1, unsigned start = 0);
 
+    /*
+     * Compute the light intensity for vertex vtx using the world description.
+     * All coordinates are in the WORLD reference system, i. e. the origin is (0,0,0).
+     */
     void illuminate(struct m3d_renderer_data &vtx, m3d_world &world);
 
     uint32_t *get_video_buffer(int16_t x0, int16_t y0);
