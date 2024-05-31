@@ -43,16 +43,16 @@ void m3d_camera::transform_to_viewpoint(m3d_vertex &vertex)
 
 void m3d_camera::project_to_screen(m3d_point &point, SDL_Point &pix)
 {
-	pix.x = (point.myvector[X_C] / point.myvector[T_C] * screen_resolution.x + screen_resolution.x) / 2;
-	pix.y = (-point.myvector[Y_C] / point.myvector[T_C] * screen_resolution.y + screen_resolution.y) / 2;
+	pix.x = (int)(point.myvector[X_C] / point.myvector[T_C] * screen_resolution.x + screen_resolution.x) / 2;
+	pix.y = (int)(-point.myvector[Y_C] / point.myvector[T_C] * screen_resolution.y + screen_resolution.y) / 2;
 }
 
 void m3d_camera::transform_and_project_to_screen(m3d_point &pointsrc, m3d_point &pointdst, SDL_Point &pix)
 {
 	transform.transform(pointsrc, pointdst);
 	frustum.transform(pointdst, pointdst);
-	pix.x = (pointdst.myvector[X_C] / pointdst.myvector[T_C] * screen_resolution.x + screen_resolution.x) / 2;
-	pix.y = (-pointdst.myvector[Y_C] / pointdst.myvector[T_C] * screen_resolution.y + screen_resolution.y) / 2;
+	pix.x = (int)(pointdst.myvector[X_C] / pointdst.myvector[T_C] * screen_resolution.x + screen_resolution.x) / 2;
+	pix.y = (int)(-pointdst.myvector[Y_C] / pointdst.myvector[T_C] * screen_resolution.y + screen_resolution.y) / 2;
 }
 
 bool m3d_camera::is_visible(m3d_point &point, m3d_vector &normal)
