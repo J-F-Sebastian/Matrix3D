@@ -26,7 +26,7 @@ public:
 	float get_intensity(const m3d_point & /*objpos*/, const m3d_point & /*viewer*/) { return sintensity; }
 
 	virtual m3d_color get_color(void) = 0;
-	void set_color(const m3d_color &color) { this->color = color; }
+	void set_color(const m3d_color &clr) { color = clr; }
 	void set_src_intensity(float intensity) { sintensity = (std::signbit(intensity)) ? 0.0f : intensity; };
 
 	virtual void print(void) = 0;
