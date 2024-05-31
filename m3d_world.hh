@@ -19,10 +19,10 @@ public:
 
 	int add_object(m3d_render_object &object);
 	int add_light_source(m3d_point_light_source &light_source);
-	void set_ambient_light(m3d_ambient_light &ambient_light);
+	void set_ambient_light(m3d_ambient_light &_ambient_light);
 	void set_ambient_light_intensity(float intensity);
 
-	void sort(std::list<m3d_render_object *> &objects_list);
+	void sort(std::list<m3d_render_object *> &_objects_list);
 	void print(void);
 
 	std::list<m3d_render_object *> objects_list;

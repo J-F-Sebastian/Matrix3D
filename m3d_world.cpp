@@ -46,9 +46,9 @@ int m3d_world::add_light_source(m3d_point_light_source &light_source)
 	return (0);
 }
 
-void m3d_world::set_ambient_light(m3d_ambient_light &ambient_light)
+void m3d_world::set_ambient_light(m3d_ambient_light &_ambient_light)
 {
-	this->ambient_light = ambient_light;
+	ambient_light = _ambient_light;
 }
 
 void m3d_world::set_ambient_light_intensity(float intensity)
@@ -56,18 +56,18 @@ void m3d_world::set_ambient_light_intensity(float intensity)
 	ambient_light.set_src_intensity(intensity);
 }
 
-void m3d_world::sort(list<m3d_render_object *> &objects_list)
+void m3d_world::sort(list<m3d_render_object *> &_objects_list)
 {
-	list<m3d_render_object *>::iterator itro = objects_list.begin();
+	list<m3d_render_object *>::iterator itro = _objects_list.begin();
 	m3d_point temp;
 
-	while (itro != objects_list.end())
+	while (itro != _objects_list.end())
 	{
 		camera.transform_to_viewpoint((*itro)->center, temp);
 		(*itro)->z_sorting = temp.myvector[Z_C];
 		++itro;
 	}
-	objects_list.sort(zsortobjects);
+	_objects_list.sort(zsortobjects);
 }
 
 void m3d_world::print()
