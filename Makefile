@@ -1,7 +1,7 @@
 .PHONY: all clean
 
 OBJDIR := build
-CXXFLAGS += -I E:\temp\DiegOS-GUI\SDL\include\SDL2 -Wall -Wextra -O2 -g -march=core2 -std=c++14
+CXXFLAGS += -I E:\sviluppo\SDL2-2.0.22\i686-w64-mingw32\include\SDL2 -Wall -Wextra -O2 -g3 -march=core2 -msse3 -std=c++11
 CFLAGS += -Wall -Wextra -O2 -g -march=core2
 CC = gcc
 
@@ -11,8 +11,8 @@ $(OBJDIR)/%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 all: $(addprefix $(OBJDIR)/, $(MATRIX3D))
-	$(CXX) -L E:\temp\DiegOS-GUI\SDL\lib -o matrix3d.exe $^ -lmingw32 -lSDL2main -lSDL2
-	$(CXX) -L E:\temp\DiegOS-GUI\SDL\lib -s -o matrix3d_release.exe $^ -lmingw32 -lSDL2main -lSDL2
+	$(CXX) -L E:\sviluppo\SDL2-2.0.22\i686-w64-mingw32\lib -o matrix3d.exe $^ -lmingw32 -lSDL2main -lSDL2
+	$(CXX) -L E:\sviluppo\SDL2-2.0.22\i686-w64-mingw32\lib -s -o matrix3d_release.exe $^ -lmingw32 -lSDL2main -lSDL2
 
 clean:
 	del matrix3d*.exe
