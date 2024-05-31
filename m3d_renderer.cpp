@@ -39,21 +39,21 @@ void m3d_renderer::render(m3d_world & /*world*/)
 /*
  * Sort triangle vertices and attributes by y coordinate
  */
-void m3d_renderer::sort_triangle(struct m3d_renderer_data triangle[])
+void m3d_renderer::sort_triangle(struct m3d_renderer_data trianglep[])
 {
-    if (triangle[1].toscreen.y < triangle[0].toscreen.y)
+    if (trianglep[1].toscreen.y < trianglep[0].toscreen.y)
     {
-        std::swap(triangle[0], triangle[1]);
+        std::swap(trianglep[0], trianglep[1]);
     }
 
-    if (triangle[1].toscreen.y > triangle[2].toscreen.y)
+    if (trianglep[1].toscreen.y > trianglep[2].toscreen.y)
     {
-        std::swap(triangle[1], triangle[2]);
+        std::swap(trianglep[1], trianglep[2]);
     }
 
-    if (triangle[1].toscreen.y < triangle[0].toscreen.y)
+    if (trianglep[1].toscreen.y < trianglep[0].toscreen.y)
     {
-        std::swap(triangle[0], triangle[1]);
+        std::swap(trianglep[0], trianglep[1]);
     }
 }
 
