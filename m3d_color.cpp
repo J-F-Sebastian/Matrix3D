@@ -111,7 +111,7 @@ void m3d_color::average_colors(m3d_color array[], unsigned num, m3d_color &out)
 	sumg %= 256;
 	sumb %= 256;
 
-	out.setColor(sumr, sumg, sumb, 0);
+	out.setColor((uint8_t)sumr, (uint8_t)sumg, (uint8_t)sumb, 0);
 }
 
 /*
@@ -135,7 +135,7 @@ void m3d_color::add_colors(m3d_color *array[], unsigned num, m3d_color &out)
 	sumg %= 256;
 	sumb %= 256;
 
-	out.setColor(sumr, sumg, sumb, 0);
+	out.setColor((uint8_t)sumr, (uint8_t)sumg, (uint8_t)sumb, 0);
 }
 
 void m3d_color::print()
