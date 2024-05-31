@@ -39,7 +39,11 @@
 
 struct m3d_input_point
 {
+#if defined(_MSC_VER)
+	__declspec(align(16)) float vector[m3d_vector_size];
+#else
 	float vector[m3d_vector_size] __attribute__((aligned(16)));
+#endif
 };
 
 /*
@@ -157,7 +161,11 @@ public:
 
 	static void print(const float vector[]);
 
+#if defined(_MSC_VER)
+	__declspec(align(16)) float myvector[m3d_vector_size];
+#else
 	float myvector[m3d_vector_size] __attribute__((aligned(16)));
+#endif
 };
 
 /*
@@ -364,7 +372,11 @@ public:
 
 	static void print(const float matrix[][m3d_vector_size]);
 
+#if defined(_MSC_VER)
+	__declspec(align(16)) float mymatrix[m3d_vector_size][m3d_vector_size];
+#else
 	float mymatrix[m3d_vector_size][m3d_vector_size] __attribute__((aligned(16)));
+#endif
 
 private:
 	static inline float row_by_col(const float a[][m3d_vector_size],
