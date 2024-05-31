@@ -1,0 +1,8 @@
+matrix3d/*
+matrix3ddbg/*
+.vscode/*
+.vs/*
+*.dll
+*.exe
+*.pdb
+*.ilk
