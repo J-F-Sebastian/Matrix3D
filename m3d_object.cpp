@@ -21,30 +21,30 @@ void m3d_triangle::rotate(m3d_matrix &rotation)
 /****** class m3d_object ******/
 /******************************/
 
-int m3d_object::create(struct m3d_input_point *vertices,
+int m3d_object::create(struct m3d_input_point *_vertices,
 		       const uint32_t vertnum,
-		       struct m3d_input_trimesh *mesh,
+		       struct m3d_input_trimesh *_mesh,
 		       const uint32_t meshnum)
 {
 	vector<m3d_vertex>::iterator it;
 	vector<m3d_triangle>::iterator it2;
 	m3d_vector a, b;
 
-	if (vertices && vertnum && (vertnum < M3D_MAX_VERTICES) && this->vertices.empty())
+	if (_vertices && vertnum && (vertnum < M3D_MAX_VERTICES) && vertices.empty())
 	{
 		try
 		{
-			this->vertices.resize(vertnum);
+			vertices.resize(vertnum);
 		}
 		catch (const bad_alloc &e)
 		{
 			cerr << "Out of memory " << e.what() << endl;
 			return (ENOMEM);
 		}
-		for (it = this->vertices.begin(); it != this->vertices.end(); it++)
+		for (it = vertices.begin(); it != vertices.end(); it++)
 		{
-			it->position = vertices->vector;
-			vertices++;
+			it->position = _vertices->vector;
+			_vertices++;
 		}
 		vertex_visible.reset();
 	}
@@ -53,11 +53,11 @@ int m3d_object::create(struct m3d_input_point *vertices,
 		return (EINVAL);
 	}
 
-	if (mesh && meshnum && (meshnum < M3D_MAX_TRIANGLES) && this->mesh.empty())
+	if (_mesh && meshnum && (meshnum < M3D_MAX_TRIANGLES) && mesh.empty())
 	{
 		try
 		{
-			this->mesh.resize(meshnum);
+			mesh.resize(meshnum);
 		}
 		catch (const bad_alloc &e)
 		{
@@ -65,11 +65,11 @@ int m3d_object::create(struct m3d_input_point *vertices,
 			return (ENOMEM);
 		}
 
-		for (it2 = this->mesh.begin(); it2 != this->mesh.end(); it2++, mesh++)
+		for (it2 = mesh.begin(); it2 != mesh.end(); it2++, _mesh++)
 		{
-			it2->index[0] = mesh->index[0];
-			it2->index[1] = mesh->index[1];
-			it2->index[2] = mesh->index[2];
+			it2->index[0] = _mesh->index[0];
+			it2->index[1] = _mesh->index[1];
+			it2->index[2] = _mesh->index[2];
 			/*
 			 * compute the surface normal.
 			 * vertices will be used this way:
@@ -78,10 +78,10 @@ int m3d_object::create(struct m3d_input_point *vertices,
 			 *
 			 * normal is vector1 X vector2
 			 */
-			a = this->vertices.at(mesh->index[1]).position;
-			a.subtract(this->vertices.at(mesh->index[0]).position);
-			b = this->vertices.at(mesh->index[2]).position;
-			b.subtract(this->vertices.at(mesh->index[0]).position);
+			a = vertices.at(_mesh->index[1]).position;
+			a.subtract(vertices.at(_mesh->index[0]).position);
+			b = vertices.at(_mesh->index[2]).position;
+			b.subtract(vertices.at(_mesh->index[0]).position);
 			a.cross_product(b);
 			a.normalize();
 			it2->normal = a;
@@ -253,17 +253,17 @@ void m3d_object::compute_visibility(m3d_camera &viewpoint)
 /****** class m3d_render_object ******/
 /*************************************/
 
-int m3d_render_object::create(struct m3d_input_point *vertices,
+int m3d_render_object::create(struct m3d_input_point *_vertices,
 			      const uint32_t vertnum,
-			      struct m3d_input_trimesh *mesh,
+			      struct m3d_input_trimesh *_mesh,
 			      const uint32_t meshnum,
-			      m3d_color &color)
+			      m3d_color &_color)
 {
 	vector<m3d_triangle>::iterator it;
 	vector<m3d_vertex>::iterator it2;
 	int retcode;
 
-	retcode = m3d_object::create(vertices, vertnum, mesh, meshnum);
+	retcode = m3d_object::create(_vertices, vertnum, _mesh, meshnum);
 
 	if (retcode)
 	{
@@ -275,21 +275,21 @@ int m3d_render_object::create(struct m3d_input_point *vertices,
 	// Triangles' normals are orthogonal to the surface, Vertices' normals
 	// are the normalized sum of surfaces' normals
 	//
-	for (it = this->mesh.begin(); it != this->mesh.end(); it++)
+	for (it = mesh.begin(); it != mesh.end(); it++)
 	{
-		this->vertices.at(it->index[0]).normal.add(it->normal);
-		this->vertices.at(it->index[1]).normal.add(it->normal);
-		this->vertices.at(it->index[2]).normal.add(it->normal);
+		vertices.at(it->index[0]).normal.add(it->normal);
+		vertices.at(it->index[1]).normal.add(it->normal);
+		vertices.at(it->index[2]).normal.add(it->normal);
 	}
 
 	// Normalize
-	for (it2 = this->vertices.begin(); it2 != this->vertices.end(); it2++)
+	for (it2 = vertices.begin(); it2 != vertices.end(); it2++)
 	{
 		it2->normal.print();
 		it2->normal.normalize();
 	}
 
-	this->color = color;
+	color = _color;
 	return (0);
 };
 

@@ -80,7 +80,7 @@ public:
 					      visibility_uptodate(false){};
 
 	// Set vertices, mesh, their normals and cleanup bitmaps
-	int create(struct m3d_input_point *vertices,
+	int create(struct m3d_input_point *_vertices,
 		   const uint32_t vertnum,
 		   struct m3d_input_trimesh *mesh,
 		   const uint32_t meshnum);
@@ -158,11 +158,11 @@ public:
 	// Direction is a vector starting at (0,0,0,0) and pointed towards face number 0.
 	// vertnum is the number of items in vertices.
 	// meshnum is the number of items in mesh.
-	int create(struct m3d_input_point *vertices,
+	int create(struct m3d_input_point *_vertices,
 		   const uint32_t vertnum,
-		   struct m3d_input_trimesh *mesh,
+		   struct m3d_input_trimesh *_mesh,
 		   const uint32_t meshnum,
-		   m3d_color &color);
+		   m3d_color &_color);
 
 	void print(void);
 
