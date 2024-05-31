@@ -31,7 +31,7 @@ CPPFLAGS = $(CPPFLAGS) /Zi /O1
 CPPFLAGS = $(CPPFLAGS) /O2 /arch:AVX
 !endif
 
-CPPFLAGS = $(CPPFLAGS) /I$(MYLIBSDIR)\SDL2\include\SDL2
+CPPFLAGS = $(CPPFLAGS) /I$(MYLIBSDIR)\SDL2-32\include\SDL2
 CPPFLAGS = $(CPPFLAGS) /I$(MYLIBSDIR)\SDL2_ttf\include
 
 !ifdef DEBUG
@@ -77,5 +77,5 @@ cleanall :
  del /Q matrix3ddbg.ilk
  del /Q matrix3d.exe
 
-#gensphere :
-#$(CPP) $(CPPFLAGS) /Fo$(MYOBJDIR)\ gensphere.c
+gensphere :
+ $(CPP) /EHsc /O1 /W4 /GA /std:c++20 gensphere.c
