@@ -11,10 +11,10 @@ m3d_vertex::m3d_vertex(const m3d_vertex &other) : position(other.position), norm
 void m3d_vertex::print()
 {
 #ifdef NDEBUG
-    cout << "Vertex" << endl
-         << "   +-> Position ";
-    position.print();
-    cout << "   +-> Normal ";
-    normal.print();
+	cout << "Vertex" << endl
+	     << "   +-> Position ";
+	position.print();
+	cout << "   +-> Normal ";
+	normal.print();
 #endif
 }
