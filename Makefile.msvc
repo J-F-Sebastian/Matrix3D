@@ -1,0 +1,81 @@
+#Help
+!message Building Matrix3D project
+!message ---------------------------------------------
+!message TARGETS
+!message         compileonly -> target compiles but does not link
+!message         all         -> compile and link
+!message         clean       -> removes all derived objects
+!message DEFINES
+!message         DEBUG       -> will build for debug
+!message ---------------------------------------------
+
+#Global section
+MYLIBSDIR = D:\sviluppo\
+
+#Release or debug section
+!ifdef DEBUG
+MYOBJDIR = matrix3ddbg
+!else
+MYOBJDIR = matrix3d
+!endif
+
+MYOBJS = $(MYOBJDIR)\m3d_display.obj $(MYOBJDIR)\m3d_world.obj $(MYOBJDIR)\m3d_vertex.obj $(MYOBJDIR)\m3d_renderer.obj
+MYOBJS = $(MYOBJS) $(MYOBJDIR)\m3d_object.obj $(MYOBJDIR)\m3d_math.obj $(MYOBJDIR)\m3d_light_source.obj $(MYOBJDIR)\m3d_color.obj
+MYOBJS = $(MYOBJS) $(MYOBJDIR)\m3d_camera.obj $(MYOBJDIR)\main.obj
+
+CPPFLAGS = /Oi /favor:blend /W4 /GA /std:c++20 /EHcs /MP4 /c
+
+!ifdef DEBUG
+CPPFLAGS = $(CPPFLAGS) /Zi /O1
+!else
+CPPFLAGS = $(CPPFLAGS) /O2 /arch:AVX
+!endif
+
+CPPFLAGS = $(CPPFLAGS) /I$(MYLIBSDIR)\SDL2\include\SDL2
+CPPFLAGS = $(CPPFLAGS) /I$(MYLIBSDIR)\SDL2_ttf\include
+
+!ifdef DEBUG
+CPPFLAGS = $(CPPFLAGS) /Fmatrix3ddbg.pdb /Fematrix3ddb.exe
+!else
+CPPFLAGS = $(CPPFLAGS) /Fematrix3d.exe
+!endif
+
+!ifdef DEBUG
+LNFLAGS = /Zf /Zi /favor:blend /GA /MTd
+LNFLAGS = $(LNFLAGS) /Fdmatrix3ddbg.pdb /Fematrix3ddbg.exe
+!else
+LNFLAGS = /favor:blend /GA /MT
+LNFLAGS = $(LNFLAGS) /Fematrix3d.exe
+!endif
+
+compileonly : $(MYOBJDIR) $(MYOBJS) *.hh
+
+all : $(MYOBJDIR) $(MYOBJS) *.hh
+ $(CPP) $(LNFLAGS) $(MYOBJS) $(MYLIBSDIR)\SDL2\lib\SDL2.lib $(MYLIBSDIR)\SDL2_ttf\lib\x64\SDL2_ttf.lib
+
+{}.cpp{$(MYOBJDIR)}.obj::
+ $(CPP) $(CPPFLAGS) /Fo$(MYOBJDIR)\ $<
+
+$(MYOBJDIR) :
+ -mkdir $@
+
+clean :
+ del /Q $(MYOBJDIR)\*.*
+!ifdef DEBUG
+ del /Q matrix3ddbg.exe
+ del /Q matrix3ddbg.pdb
+ del /Q matrix3ddbg.ilk
+!else
+ del /Q matrix3d.exe
+!endif
+
+cleanall :
+ del /Q matrix3ddbg\*.*
+ del /Q matrix3d\*.*
+ del /Q matrix3ddbg.exe
+ del /Q matrix3ddbg.pdb
+ del /Q matrix3ddbg.ilk
+ del /Q matrix3d.exe
+
+#gensphere :
+#$(CPP) $(CPPFLAGS) /Fo$(MYOBJDIR)\ gensphere.c
