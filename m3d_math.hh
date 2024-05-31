@@ -75,6 +75,7 @@ public:
         myvector[Y_C] = other.myvector[Y_C];
         myvector[Z_C] = other.myvector[Z_C];
         myvector[T_C] = other.myvector[T_C];
+        // myvector[T_C] = 0.0f;
     }
 
     void operator=(const float other[])
@@ -82,7 +83,8 @@ public:
         myvector[X_C] = other[X_C];
         myvector[Y_C] = other[Y_C];
         myvector[Z_C] = other[Z_C];
-        myvector[T_C] = other[T_C];
+        // myvector[T_C] = other[T_C];
+        myvector[T_C] = 0.0f;
     }
 
     friend m3d_vector operator+(const m3d_vector &veca, const m3d_vector &vecb)
@@ -435,7 +437,7 @@ public:
 
 /*
  * Linear interpolation for single values.
- * 
+ *
  * val(N) = val1 + N*val2/steps
  */
 
@@ -483,7 +485,7 @@ private:
 
 /*
  * Linear interpolation for reciprocal of single values.
- * 
+ *
  * val(N) = 1/val1 + N*(1/val2)/steps
  */
 
@@ -530,9 +532,9 @@ private:
 
 /*
  * Reciprocal linear interpolation of single values.
- * 
+ *
  * val(N)/z(N) = val1/z1 + N*val2/z2/steps
- * 
+ *
  * val(N) = z(N) * (val1/z1 + N*val2/z2/steps)
  */
 
@@ -598,9 +600,9 @@ private:
 
 /*
  * Reciprocal linear interpolation of vectors.
- * 
+ *
  * vector(N)/z(N) = vector1/z1 + N*vector2/z2/steps
- * 
+ *
  * vector(N) = z(N) * (vector1/z1 + N*vector1/z2/steps)
  */
 class m3d_reciprocal_z_interpv_step

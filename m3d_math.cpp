@@ -25,7 +25,10 @@ m3d_vector::m3d_vector()
 
 m3d_vector::m3d_vector(const float values[])
 {
-    (*this) = values;
+    myvector[X_C] = values[X_C];
+    myvector[Y_C] = values[Y_C];
+    myvector[Z_C] = values[Z_C];
+    myvector[T_C] = 0.0f;
 }
 
 m3d_vector::m3d_vector(const m3d_vector &other)
