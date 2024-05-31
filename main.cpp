@@ -108,7 +108,7 @@ INT WINAPI wWinMain( HINSTANCE hInst, HINSTANCE, LPWSTR, INT )
 
 #define NELEMENTS(x) (sizeof(x) / sizeof(x[0]))
 
-//TEMP NEED A CLASS TO HANDLE EVENTS & WORLD UPDATES
+// TEMP NEED A CLASS TO HANDLE EVENTS & WORLD UPDATES
 #include <SDL.h>
 #include <ctime>
 #include "m3d_renderer.hh"
@@ -119,15 +119,15 @@ INT WINAPI wWinMain( HINSTANCE hInst, HINSTANCE, LPWSTR, INT )
 using namespace std;
 
 struct m3d_input_point madcube[] = {/* first square, y coords positive */
-                                    {{100.0, 100.0, 100.0, 1.0}},
-                                    {{100.0, 100.0, -100.0, 1.0}},
-                                    {{-100.0, 100.0, -100.0, 1.0}},
-                                    {{-100.0, 100.0, 100.0, 1.0}},
-                                    /* second square, y coords negative */
-                                    {{100.0, -100.0, 100.0, 1.0}},
-                                    {{100.0, -100.0, -100.0, 1.0}},
-                                    {{-100.0, -100.0, -100.0, 1.0}},
-                                    {{-100.0, -100.0, 100.0, 1.0}}};
+				    {{100.0, 100.0, 100.0, 1.0}},
+				    {{100.0, 100.0, -100.0, 1.0}},
+				    {{-100.0, 100.0, -100.0, 1.0}},
+				    {{-100.0, 100.0, 100.0, 1.0}},
+				    /* second square, y coords negative */
+				    {{100.0, -100.0, 100.0, 1.0}},
+				    {{100.0, -100.0, -100.0, 1.0}},
+				    {{-100.0, -100.0, -100.0, 1.0}},
+				    {{-100.0, -100.0, 100.0, 1.0}}};
 
 struct m3d_input_point viewpoint = {{1000.0f, 1000.0f, 1000.0f, 1.0f}};
 struct m3d_input_point viewpointat = {{0.0f, 0.0f, 0.0f, 1.0f}};
@@ -136,185 +136,188 @@ struct m3d_input_point lightat = {{50.0f, 50.0f, 50.0f, 1.0f}};
 
 int main(int argc, char *argv[])
 {
-    m3d_color cubecolor(255, 1, 1, 0);
-    m3d_color cubecolor2(1, 255, 1, 0);
-    m3d_color cubecolor3(1, 1, 255, 0);
-    m3d_color spherecolor(64, 128, 255, 0);
-    m3d_color ambientcolor(255, 255, 255, 0);
-    m3d_render_object cubeo, cubeo2, cubeo3, sphereo, *objcmd;
-    m3d_ambient_light ambient(ambientcolor, 0.4f);
-    //m3d_point_light_source lsource(lightpos, ambientcolor, 100.0f, 1.0f, 1.0f, 20000.0f);
-    m3d_spot_light_source lsource(lightat, lightpos, ambientcolor, 100.0f, 1.0f, 1.0f, 20000.0f);
-    m3d_camera camera(viewpoint, viewpointat, 1024, 768);
-    m3d_world world(ambient, camera);
-    m3d_display display(1024, 768);
-    m3d_renderer *renderer[6];
-    SDL_Event event;
-    int goon = 1;
-    int renderer_index = 0;
-    float stepping = 1.0f;
-    time_t chronograph = time(NULL);
+	m3d_color cubecolor(255, 1, 1, 0);
+	m3d_color cubecolor2(1, 255, 1, 0);
+	m3d_color cubecolor3(1, 1, 255, 0);
+	m3d_color spherecolor(64, 128, 255, 0);
+	m3d_color ambientcolor(255, 255, 255, 0);
+	m3d_render_object cubeo, cubeo2, cubeo3, sphereo, *objcmd;
+	m3d_ambient_light ambient(ambientcolor, 0.4f);
+	m3d_point_light_source lsource(lightpos, ambientcolor, 100.0f, 1.0f, 0.1f, 20000.0f);
+	// m3d_spot_light_source lsource(lightat, lightpos, ambientcolor, 100.0f, 1.0f, 1.0f, 20000.0f);
+	m3d_camera camera(viewpoint, viewpointat, 1024, 768);
+	m3d_world world(ambient, camera);
+	m3d_display display(1024, 768);
+	m3d_renderer *renderer[6];
+	SDL_Event event;
+	int goon = 1;
+	int renderer_index = 0;
+	float stepping = 1.0f;
+	time_t chronograph = time(NULL);
 
-    std::cout << "Matrix3D" << std::endl;
-    __builtin_cpu_init();
-    if (__builtin_cpu_is("intel"))
-        std::cout << "running on a Intel CPU." << std::endl;
-    if (__builtin_cpu_is("amd"))
-        std::cout << "running on a AMD CPU." << std::endl;
-    if (__builtin_cpu_supports("mmx"))
-        std::cout << "with MMX instructions." << std::endl;
-    if (__builtin_cpu_supports("sse"))
-        std::cout << "with SSE instructions." << std::endl;
-    if (__builtin_cpu_supports("sse2"))
-        std::cout << "with SSE2 instructions." << std::endl;
-    if (__builtin_cpu_supports("sse3"))
-        std::cout << "with SSE3 instructions." << std::endl;
-    if (__builtin_cpu_supports("ssse3"))
-        std::cout << "with SSSE3 instructions." << std::endl;
-    if (__builtin_cpu_supports("sse4.1"))
-        std::cout << "with SSE4.1 instructions." << std::endl;
-    if (__builtin_cpu_supports("sse4.2"))
-        std::cout << "with SSE4.2 instructions." << std::endl;
-    if (__builtin_cpu_supports("sse4a"))
-        std::cout << "with SSE4A instructions." << std::endl;
+	std::cout << "Matrix3D" << std::endl;
+	__builtin_cpu_init();
+	if (__builtin_cpu_is("intel"))
+		std::cout << "running on a Intel CPU." << std::endl;
+	if (__builtin_cpu_is("amd"))
+		std::cout << "running on a AMD CPU." << std::endl;
+	if (__builtin_cpu_supports("mmx"))
+		std::cout << "with MMX instructions." << std::endl;
+	if (__builtin_cpu_supports("sse"))
+		std::cout << "with SSE instructions." << std::endl;
+	if (__builtin_cpu_supports("sse2"))
+		std::cout << "with SSE2 instructions." << std::endl;
+	if (__builtin_cpu_supports("sse3"))
+		std::cout << "with SSE3 instructions." << std::endl;
+	if (__builtin_cpu_supports("ssse3"))
+		std::cout << "with SSSE3 instructions." << std::endl;
+	if (__builtin_cpu_supports("sse4.1"))
+		std::cout << "with SSE4.1 instructions." << std::endl;
+	if (__builtin_cpu_supports("sse4.2"))
+		std::cout << "with SSE4.2 instructions." << std::endl;
+	if (__builtin_cpu_supports("sse4a"))
+		std::cout << "with SSE4A instructions." << std::endl;
 
-    renderer[0] = new m3d_renderer_wireframe(&display);
-    renderer[1] = new m3d_renderer_flat(&display);
-    renderer[2] = new m3d_renderer_flatf(&display);
-    renderer[3] = new m3d_renderer_shaded(&display);
-    renderer[4] = new m3d_renderer_shaded_gouraud(&display);
-    renderer[5] = new m3d_renderer_shaded_phong(&display);
-    cubeo.create(cube, NELEMENTS(cube), cubemesh, NELEMENTS(cubemesh), cubecolor);
-    cubeo2.create(cube, NELEMENTS(cube), cubemesh, NELEMENTS(cubemesh), cubecolor2);
-    cubeo3.create(cube, NELEMENTS(cube), cubemesh, NELEMENTS(cubemesh), cubecolor3);
-    sphereo.create(sphere, NELEMENTS(sphere), spheremesh, NELEMENTS(spheremesh), spherecolor);
-    m3d_vector newpos(300.0f, 0.0f, 0.0f);
-    m3d_vector newpos2(0.0f, 300.0f, 0.0f);
-    m3d_vector newpos3(0.0f, 0.0f, 300.0f);
-    m3d_vector newpos4(200.0f, 300.0f, -300.0f);
-    cubeo.move(newpos);
-    cubeo2.move(newpos2);
-    cubeo3.move(newpos3);
-    sphereo.move(newpos4);
-    world.add_light_source(lsource);
-    world.add_object(cubeo);
-    world.add_object(cubeo2);
-    world.add_object(cubeo3);
-    world.add_object(sphereo);
-    world.print();
+	renderer[0] = new m3d_renderer_wireframe(&display);
+	renderer[1] = new m3d_renderer_flat(&display);
+	renderer[2] = new m3d_renderer_flatf(&display);
+	renderer[3] = new m3d_renderer_shaded(&display);
+	renderer[4] = new m3d_renderer_shaded_gouraud(&display);
+	renderer[5] = new m3d_renderer_shaded_phong(&display);
+	cubeo.create(cube, NELEMENTS(cube), cubemesh, NELEMENTS(cubemesh), cubecolor);
+	cubeo2.create(cube, NELEMENTS(cube), cubemesh, NELEMENTS(cubemesh), cubecolor2);
+	cubeo3.create(cube, NELEMENTS(cube), cubemesh, NELEMENTS(cubemesh), cubecolor3);
+	sphereo.create(sphere, NELEMENTS(sphere), spheremesh, NELEMENTS(spheremesh), spherecolor);
+	m3d_vector newpos(300.0f, 0.0f, 0.0f);
+	m3d_vector newpos2(0.0f, 300.0f, 0.0f);
+	m3d_vector newpos3(0.0f, 0.0f, 300.0f);
+	m3d_vector newpos4(200.0f, 300.0f, -300.0f);
+	cubeo.move(newpos);
+	cubeo2.move(newpos2);
+	cubeo3.move(newpos3);
+	sphereo.move(newpos4);
+	world.add_light_source(lsource);
+	world.add_object(cubeo);
+	world.add_object(cubeo2);
+	world.add_object(cubeo3);
+	world.add_object(sphereo);
+	world.print();
 
-    time_t chronograph2 = time(NULL);
-    std::cout << "SETUP [" << renderer_index << "]: " << chronograph2 - chronograph << std::endl;
-    renderer[renderer_index]->render(world);
+	time_t chronograph2 = time(NULL);
+	std::cout << "SETUP [" << renderer_index << "]: " << chronograph2 - chronograph << std::endl;
+	renderer[renderer_index]->render(world);
 
-    objcmd = &cubeo;
-    chronograph = time(NULL);
-    while (goon)
-    {
-        objcmd = &cubeo;
-        objcmd->yaw(stepping);
-        objcmd->pitch(stepping);
-        objcmd->roll(stepping);
+	objcmd = &cubeo;
+	chronograph = time(NULL);
+	while (goon)
+	{
+		objcmd = &cubeo;
+		objcmd->yaw(stepping);
+		objcmd->pitch(stepping);
+		objcmd->roll(stepping);
 
-        objcmd = &cubeo2;
-        objcmd->yaw(stepping);
-        objcmd->pitch(stepping);
-        objcmd->roll(stepping);
+		objcmd = &cubeo2;
+		objcmd->yaw(stepping);
+		objcmd->pitch(stepping);
+		objcmd->roll(stepping);
 
-        objcmd = &cubeo3;
-        objcmd->yaw(stepping);
-        objcmd->pitch(stepping);
-        objcmd->roll(stepping);
+		objcmd = &cubeo3;
+		objcmd->yaw(stepping);
+		objcmd->pitch(stepping);
+		objcmd->roll(stepping);
 
-        objcmd = &sphereo;
-        objcmd->yaw(stepping);
-        objcmd->pitch(stepping);
-        objcmd->roll(stepping);
-        if (stepping < 359.0f)
-            stepping += 1.37f;
-        else
-        {
-            stepping = 1.0f;
-            if (renderer_index > 5)
-                goon = 0;
-            else
-            {
-                chronograph2 = time(NULL);
-                std::cout << "RENDERING [" << renderer_index << "]: " << chronograph2 - chronograph << std::endl;
-                chronograph = chronograph2;
-                renderer_index++;
-            }
-        }
+		objcmd = &sphereo;
+		objcmd->yaw(stepping);
+		objcmd->pitch(stepping);
+		objcmd->roll(stepping);
+		if (stepping < 359.0f)
+		{
+			stepping += 1.37f;
+			SDL_Delay(50);
+		}
+		else
+		{
+			stepping = 1.0f;
+			if (renderer_index > 5)
+				goon = 0;
+			else
+			{
+				chronograph2 = time(NULL);
+				std::cout << "RENDERING [" << renderer_index << "]: " << chronograph2 - chronograph << std::endl;
+				chronograph = chronograph2;
+				renderer_index++;
+			}
+		}
 
-        renderer[renderer_index]->render(world);
-    }
-    //chronograph2 = time(NULL);
-    //std::cout << "RENDERING [" << renderer_index << "]: " << chronograph2 - chronograph << std::endl;
-    delete[] renderer;
-    return 0;
+		renderer[renderer_index]->render(world);
+	}
+	// chronograph2 = time(NULL);
+	// std::cout << "RENDERING [" << renderer_index << "]: " << chronograph2 - chronograph << std::endl;
+	delete[] renderer;
+	return 0;
 
-    while (goon && SDL_WaitEvent(&event))
-    {
-        switch (event.type)
-        {
-        case SDL_KEYDOWN:
-            switch (event.key.keysym.sym)
-            {
-            case SDLK_1:
-                objcmd = &cubeo;
-                break;
-            case SDLK_2:
-                objcmd = &cubeo2;
-                break;
-            case SDLK_3:
-                objcmd = &cubeo3;
-                break;
-            case SDLK_4:
-                objcmd = &sphereo;
-                break;
-            case SDLK_RIGHT:
-                objcmd->yaw(stepping);
-                break;
-            case SDLK_LEFT:
-                objcmd->yaw(-stepping);
-                break;
-            case SDLK_UP:
-                objcmd->pitch(stepping);
-                break;
-            case SDLK_DOWN:
-                objcmd->pitch(-stepping);
-                break;
-            case SDLK_z:
-                objcmd->roll(stepping);
-                break;
-            case SDLK_x:
-                objcmd->roll(-stepping);
-                break;
-            case SDLK_r:
-                renderer_index++;
-                if (renderer_index > 5)
-                    renderer_index = 0;
-                break;
-            case SDLK_ESCAPE:
-                goon = 0;
-                break;
-            case SDLK_PLUS:
-                if (stepping < 179.0f)
-                    stepping += 1.25f;
-                break;
-            case SDLK_MINUS:
-                if (stepping > -179.f)
-                    stepping -= 1.25f;
-                break;
-            }
-            break;
-        default:
-            continue;
-        }
-        renderer[renderer_index]->render(world);
-    }
-    delete[] renderer;
-    return 0;
+	while (goon && SDL_WaitEvent(&event))
+	{
+		switch (event.type)
+		{
+		case SDL_KEYDOWN:
+			switch (event.key.keysym.sym)
+			{
+			case SDLK_1:
+				objcmd = &cubeo;
+				break;
+			case SDLK_2:
+				objcmd = &cubeo2;
+				break;
+			case SDLK_3:
+				objcmd = &cubeo3;
+				break;
+			case SDLK_4:
+				objcmd = &sphereo;
+				break;
+			case SDLK_RIGHT:
+				objcmd->yaw(stepping);
+				break;
+			case SDLK_LEFT:
+				objcmd->yaw(-stepping);
+				break;
+			case SDLK_UP:
+				objcmd->pitch(stepping);
+				break;
+			case SDLK_DOWN:
+				objcmd->pitch(-stepping);
+				break;
+			case SDLK_z:
+				objcmd->roll(stepping);
+				break;
+			case SDLK_x:
+				objcmd->roll(-stepping);
+				break;
+			case SDLK_r:
+				renderer_index++;
+				if (renderer_index > 5)
+					renderer_index = 0;
+				break;
+			case SDLK_ESCAPE:
+				goon = 0;
+				break;
+			case SDLK_PLUS:
+				if (stepping < 179.0f)
+					stepping += 1.25f;
+				break;
+			case SDLK_MINUS:
+				if (stepping > -179.f)
+					stepping -= 1.25f;
+				break;
+			}
+			break;
+		default:
+			continue;
+		}
+		renderer[renderer_index]->render(world);
+	}
+	delete[] renderer;
+	return 0;
 }
 
 #endif
