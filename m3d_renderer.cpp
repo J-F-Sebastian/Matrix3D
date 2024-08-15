@@ -260,29 +260,45 @@ void m3d_renderer::store_scanlines(int16_t x0,
 
 void m3d_renderer::illuminate(struct m3d_renderer_data &vtx, m3d_world &world)
 {
-    list<m3d_point_light_source *>::iterator lights = world.lights_list.begin();
     m3d_point L;
     float NdotL;
 
-    //Compute Kdiffuse for Diffuse Lightning
+    // Compute Kdiffuse for Diffuse Lightning
     //
-    // Kdiffuse = SurfaceColor x (AmbientIntensity + Sum(LightSourceIntensity x Max(NdotL, 0))
+    //  Kdiffuse = SurfaceColor x (AmbientIntensity + Sum(LightSourceIntensity x Max(NdotL, 0))
     //
-    // Start assigning the ambient intensity
+    //  Start assigning the ambient intensity
     vtx.lightint = world.ambient_light.get_intensity(vtx.vertex, world.camera.get_position());
-    //Sum(LightSourceIntensity x Max(NdotL, 0) is added to ambient intensity
-    while (lights != world.lights_list.end())
+    // Sum(LightSourceIntensity x Max(NdotL, 0) is added to ambient intensity
+    for (auto lights : world.lights_list)
     {
-        L = (*lights)->get_position();
+        L = lights->get_position();
         L.subtract(vtx.vertex);
         L.normalize();
         NdotL = m3d_max(L.dot_product(vtx.normal), 0.0f);
         if (NdotL != 0.0f)
         {
-            NdotL *= (*lights)->get_intensity(vtx.vertex, world.camera.get_position());
+            NdotL *= lights->get_intensity(vtx.vertex, world.camera.get_position());
             vtx.lightint += NdotL;
         }
-        ++lights;
+    }
+}
+
+void m3d_renderer::compute_visible_list_and_sort(m3d_world &world)
+{
+    vislist.clear();
+
+    for (auto itro : world.objects_list)
+    {
+        itro->compute_visibility(world.camera);
+        if (itro->triangle_visible.any())
+            vislist.push_front(itro);
+    }
+
+    if (vislist.size())
+    {
+        world.sort(vislist);
+        zbuffer.reset();
     }
 }
 
@@ -338,95 +354,82 @@ void m3d_renderer_wireframe::render(m3d_world &world)
  */
 void m3d_renderer_flat::render(m3d_world &world)
 {
-    list<m3d_render_object *>::iterator itro = world.objects_list.begin();
-    list<m3d_render_object *>::reverse_iterator ritro;
-    list<m3d_render_object *> vislist;
-    list<m3d_point_light_source *>::iterator lights;
-    vector<m3d_triangle>::iterator triangle;
     unsigned runlen[3];
     unsigned i, j;
     m3d_point L;
     struct m3d_renderer_data vtx[3];
 
-    while (itro != world.objects_list.end())
-    {
-        (*itro)->compute_visibility(world.camera);
-        if ((*itro)->triangle_visible.any())
-            vislist.push_back((*itro));
-        ++itro;
-    }
-    if (vislist.empty())
-        return;
+    // Compute visible objects
+    compute_visible_list_and_sort(world);
 
-    zbuffer.reset();
-    world.sort(vislist);
-    //Fill the surface black
+    // Fill the surface black
     display->clear_buffer();
 
-    for (ritro = vislist.rbegin(); ritro != vislist.rend(); ritro++)
+    for (auto itro : vislist)
     {
-        for (i = 0, triangle = (*ritro)->mesh.begin(); triangle != (*ritro)->mesh.end(); i++, triangle++)
+        i = 0;
+        for (auto &triangle : itro->mesh)
         {
-            if ((*ritro)->triangle_visible[i])
+            if (itro->triangle_visible[i++])
             {
                 for (j = 0; j < 3; j++)
                 {
-                    vtx[j].vertex = (*ritro)->vertices[triangle->index[j]].position;
-                    vtx[j].vertex.add((*ritro)->center);
-                    vtx[j].normal = (*ritro)->vertices[triangle->index[j]].normal;
+                    vtx[j].vertex = itro->vertices[triangle.index[j]].position;
+                    vtx[j].vertex.add(itro->center);
+                    vtx[j].normal = itro->vertices[triangle.index[j]].normal;
                     illuminate(vtx[j], world);
-                    world.camera.transform_and_project_to_screen(vtx[j].vertex, vtx[j].toscreen);
+                    world.camera.transform_and_project_to_screen(vtx[j].vertex, vtx[j].vertex, vtx[j].toscreen);
                 }
 
                 sort_triangle(vtx);
 
                 // color is blended, brighten is a multiplication
-                vtx[0].color = (*ritro)->color;
+                vtx[0].color = itro->color;
                 vtx[0].color.brighten(m3d_average_light(vtx));
                 /*
-                * alloc a vector of memory pointers for any y.
-                * In other words store all x computed along the lines composing
-                * the triangle.
-                * Obviously the number of pointers is twice the distance from smallest
-                * to biggest y values.
-                * run0 = run1 + run2 - 1
-                *
-                * run1 and run2 have 1 overlapping point
-                *
-                */
+                 * alloc a vector of memory pointers for any y.
+                 * In other words store all x computed along the lines composing
+                 * the triangle.
+                 * Obviously the number of pointers is twice the distance from smallest
+                 * to biggest y values.
+                 * run0 = run1 + run2 - 1
+                 *
+                 * run1 and run2 have 1 overlapping point
+                 *
+                 */
 
                 runlen[0] = vtx[2].toscreen.y - vtx[0].toscreen.y + 1;
                 runlen[1] = vtx[1].toscreen.y - vtx[0].toscreen.y + 1;
                 runlen[2] = vtx[2].toscreen.y - vtx[1].toscreen.y + 1;
 
                 /*
-                * Store x in this order: A to C, A to B, B to C
-                *
-                *           A
-                *
-                *       B
-                *
-                *
-                *              C
-                */
+                 * Store x in this order: A to C, A to B, B to C
+                 *
+                 *           A
+                 *
+                 *       B
+                 *
+                 *
+                 *              C
+                 */
 
                 /*
-                * run0 cannot be 1, as this is avoided by the initial check on x and y
-                */
-                store_scanlines(vtx[0].toscreen.x, vtx[0].toscreen.y,
-                                vtx[2].toscreen.x, vtx[2].toscreen.y);
+                 * run0 cannot be 1, as this is avoided by the initial check on x and y
+                 */
+                store_scanlines((int16_t)vtx[0].toscreen.x, (int16_t)vtx[0].toscreen.y,
+                                (int16_t)vtx[2].toscreen.x, (int16_t)vtx[2].toscreen.y);
 
                 /*
-                * run1 and run2 can be 1, but not both of them, as run1 cannot be 1
-                * (nor 0!) and run0 = run1 + run2 - 1.
-                * When a run equals 1, the line is horizontal.
-                */
-                store_scanlines(vtx[0].toscreen.x, vtx[0].toscreen.y,
-                                vtx[1].toscreen.x, vtx[1].toscreen.y,
+                 * run1 and run2 can be 1, but not both of them, as run1 cannot be 1
+                 * (nor 0!) and run0 = run1 + run2 - 1.
+                 * When a run equals 1, the line is horizontal.
+                 */
+                store_scanlines((int16_t)vtx[0].toscreen.x, (int16_t)vtx[0].toscreen.y,
+                                (int16_t)vtx[1].toscreen.x, (int16_t)vtx[1].toscreen.y,
                                 runlen[0]);
 
-                store_scanlines(vtx[1].toscreen.x, vtx[1].toscreen.y,
-                                vtx[2].toscreen.x, vtx[2].toscreen.y,
+                store_scanlines((int16_t)vtx[1].toscreen.x, (int16_t)vtx[1].toscreen.y,
+                                (int16_t)vtx[2].toscreen.x, (int16_t)vtx[2].toscreen.y,
                                 runlen[0] + runlen[1] - 1);
 
                 triangle_fill_flat(vtx, runlen);
@@ -434,7 +437,7 @@ void m3d_renderer_flat::render(m3d_world &world)
         }
     }
 
-    //Present the rendered lines
+    // Present the rendered lines
     display->show_buffer();
 }
 
@@ -532,49 +535,35 @@ void m3d_renderer_flat::triangle_fill_flat(struct m3d_renderer_data vtx[],
 
 void m3d_renderer_flatf::render(m3d_world &world)
 {
-    list<m3d_render_object *>::iterator itro = world.objects_list.begin();
-    list<m3d_render_object *>::reverse_iterator ritro;
-    list<m3d_render_object *> vislist;
-    list<m3d_point_light_source *>::iterator lights;
-    vector<m3d_triangle>::iterator triangle;
     unsigned i, j;
     m3d_point L;
     struct m3d_renderer_data vtx[3];
 
-    while (itro != world.objects_list.end())
-    {
-        (*itro)->compute_visibility(world.camera);
-        if ((*itro)->triangle_visible.any())
-            vislist.push_back((*itro));
-        ++itro;
-    }
-    if (vislist.empty())
-        return;
+    compute_visible_list_and_sort(world);
 
-    zbuffer.reset();
-    world.sort(vislist);
-    //Fill the surface black
+    // Fill the surface black
     display->clear_buffer();
 
-    for (ritro = vislist.rbegin(); ritro != vislist.rend(); ritro++)
+    for (auto itro : vislist)
     {
-        for (i = 0, triangle = (*ritro)->mesh.begin(); triangle != (*ritro)->mesh.end(); i++, triangle++)
+        i = 0;
+        for (auto &triangle : itro->mesh)
         {
-            if ((*ritro)->triangle_visible[i])
+            if (itro->triangle_visible[i++])
             {
                 for (j = 0; j < 3; j++)
                 {
-                    vtx[j].vertex = (*ritro)->vertices[triangle->index[j]].position;
-                    vtx[j].vertex.add((*ritro)->center);
-                    vtx[j].normal = (*ritro)->vertices[triangle->index[j]].normal;
+                    vtx[j].vertex = itro->vertices[triangle.index[j]].position;
+                    vtx[j].vertex.add(itro->center);
+                    vtx[j].normal = itro->vertices[triangle.index[j]].normal;
                     illuminate(vtx[j], world);
-                    world.camera.transform_and_project_to_screen(vtx[j].vertex, vtx[j].toscreen);
+                    world.camera.transform_and_project_to_screen(vtx[j].vertex, vtx[j].vertex, vtx[j].toscreen);
                 }
 
                 sort_triangle(vtx);
 
                 // color is blended, brighten is a multiplication
-                vtx[0].color = (*ritro)->color;
+                vtx[0].color = itro->color;
                 vtx[0].color.brighten(m3d_average_light(vtx));
 
                 triangle_fill_flat(vtx);
@@ -582,33 +571,33 @@ void m3d_renderer_flatf::render(m3d_world &world)
         }
     }
 
-    //Present the rendered lines
+    // Present the rendered lines
     display->show_buffer();
 }
 
 void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
 {
-    unsigned a = 0;
+    unsigned a = 1;
     uint32_t *output, *outputend;
     int16_t *outz;
     float p0 = vtx[0].vertex.myvector[Z_C];
     float p1 = vtx[1].vertex.myvector[Z_C];
     float p2 = vtx[2].vertex.myvector[Z_C];
-    float p3 = vtx[0].toscreen.x;
-    float p4 = vtx[1].toscreen.x;
-    float p5 = vtx[2].toscreen.x;
+    float p3 = (float)vtx[0].toscreen.x;
+    float p4 = (float)vtx[1].toscreen.x;
+    float p5 = (float)vtx[2].toscreen.x;
     unsigned runlen0 = vtx[2].toscreen.y - vtx[0].toscreen.y + 1;
     unsigned runlen1 = vtx[1].toscreen.y - vtx[0].toscreen.y + 1;
     unsigned runlen2 = vtx[2].toscreen.y - vtx[1].toscreen.y;
     unsigned fillrunlen;
-    m3d_interp_step zrun0((float)(runlen0), p0, p2);
-    m3d_interp_step zrun1((float)(runlen1), p0, p1);
-    m3d_interp_step zrun2((float)(runlen2), p1, p2);
-    m3d_interp_step xrun0((float)(runlen0), p3, p5);
-    m3d_interp_step xrun1((float)(runlen1), p3, p4);
-    m3d_interp_step xrun2((float)(runlen2), p4, p5);
+    m3d_interp_step zrun0(runlen0, p0, p2);
+    m3d_interp_step zrun1(runlen1, p0, p1);
+    m3d_interp_step zrun2(runlen2, p1, p2);
+    m3d_interp_step xrun0(runlen0, p3, p5);
+    m3d_interp_step xrun1(runlen1, p3, p4);
+    m3d_interp_step xrun2(runlen2, p4, p5);
     m3d_interp_step *zrleft, *zrright, *xrleft, *xrright;
-    int16_t y = vtx[0].toscreen.y;
+    int16_t y = (int16_t)vtx[0].toscreen.y;
 
     /*
      * check x values to understand who's the left half and who's the right
@@ -696,93 +685,80 @@ void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
 
 void m3d_renderer_shaded::render(m3d_world &world)
 {
-    list<m3d_render_object *>::iterator itro = world.objects_list.begin();
-    list<m3d_render_object *>::reverse_iterator ritro;
-    list<m3d_render_object *> vislist;
-    list<m3d_point_light_source *>::iterator lights;
-    vector<m3d_triangle>::iterator triangle;
     unsigned runlen[3];
     unsigned i, j;
-    m3d_point L;
+    m3d_point L, temp;
     struct m3d_renderer_data vtx[3];
 
-    while (itro != world.objects_list.end())
-    {
-        (*itro)->compute_visibility(world.camera);
-        if ((*itro)->triangle_visible.any())
-            vislist.push_back((*itro));
-        ++itro;
-    }
-    if (vislist.empty())
-        return;
+    compute_visible_list_and_sort(world);
 
-    zbuffer.reset();
-    world.sort(vislist);
-    //Fill the surface black
+    // Fill the surface black
     display->clear_buffer();
 
-    for (ritro = vislist.rbegin(); ritro != vislist.rend(); ritro++)
+    for (auto itro : vislist)
     {
-        for (i = 0, triangle = (*ritro)->mesh.begin(); triangle != (*ritro)->mesh.end(); i++, triangle++)
+        i = 0;
+        for (auto &triangle : itro->mesh)
         {
-            if ((*ritro)->triangle_visible[i])
+            if (itro->triangle_visible[i++])
             {
                 for (j = 0; j < 3; j++)
                 {
-                    vtx[j].vertex = (*ritro)->vertices[triangle->index[j]].position;
-                    vtx[j].vertex.add((*ritro)->center);
-                    vtx[j].normal = (*ritro)->vertices[triangle->index[j]].position;
-                    illuminate(vtx[j], world);
-                    world.camera.transform_and_project_to_screen(vtx[j].vertex, vtx[j].toscreen);
-                    vtx[j].color = (*ritro)->color;
+                    vtx[j].vertex = itro->vertices[triangle.index[j]].position;
+                    vtx[j].vertex.add(itro->center);
+                    vtx[j].normal = itro->vertices[triangle.index[j]].normal;
+                    // illuminate(vtx[j], world);
+                    // world.camera.transform_and_project_to_screen(vtx[j].vertex, vtx[j].toscreen);
+                    world.camera.transform_and_project_to_screen(vtx[j].vertex, temp, vtx[j].toscreen);
+                    vtx[j].color = itro->color;
                 }
 
                 sort_triangle(vtx);
 
                 /*
-                * alloc a vector of memory pointers for any y.
-                * In other words store all x computed along the lines composing
-                * the triangle.
-                * Obviously the number of pointers is twice the distance from smallest
-                * to biggest y values.
-                * run0 = run1 + run2 - 1
-                *
-                * run1 and run2 have 1 overlapping point
-                *
-                */
+                 * alloc a vector of memory pointers for any y.
+                 * In other words store all x computed along the lines composing
+                 * the triangle.
+                 * Obviously the number of pointers is twice the distance from smallest
+                 * to biggest y values.
+                 * run0 = run1 + run2 - 1
+                 *
+                 * run1 and run2 have 1 overlapping point
+                 *
+                 */
 
                 runlen[0] = vtx[2].toscreen.y - vtx[0].toscreen.y + 1;
                 runlen[1] = vtx[1].toscreen.y - vtx[0].toscreen.y + 1;
                 runlen[2] = vtx[2].toscreen.y - vtx[1].toscreen.y + 1;
 
                 /*
-                * Store x in this order: A to C, A to B, B to C
-                *
-                *           A
-                *
-                *       B
-                *
-                *
-                *              C
-                */
+                 * Store x in this order: A to C, A to B, B to C
+                 *
+                 *           A
+                 *
+                 *       B
+                 *
+                 *
+                 *              C
+                 */
 
                 /*
-                * run0 cannot be 1, as this is avoided by the initial check on x and y
-                */
-                store_scanlines(vtx[0].toscreen.x, vtx[0].toscreen.y,
-                                vtx[2].toscreen.x, vtx[2].toscreen.y);
+                 * run0 cannot be 1, as this is avoided by the initial check on x and y
+                 */
+                store_scanlines((int16_t)vtx[0].toscreen.x, (int16_t)vtx[0].toscreen.y,
+                                (int16_t)vtx[2].toscreen.x, (int16_t)vtx[2].toscreen.y);
 
                 /*
-                * run1 and run2 can be 1, but not both of them, as run1 cannot be 1
-                * (nor 0!) and run0 = run1 + run2 - 1.
-                * When a run equals 1, the line is horizontal.
-                */
-                store_scanlines(vtx[0].toscreen.x, vtx[0].toscreen.y,
-                                vtx[1].toscreen.x, vtx[1].toscreen.y,
+                 * run1 and run2 can be 1, but not both of them, as run1 cannot be 1
+                 * (nor 0!) and run0 = run1 + run2 - 1.
+                 * When a run equals 1, the line is horizontal.
+                 */
+                store_scanlines((int16_t)vtx[0].toscreen.x, (int16_t)vtx[0].toscreen.y,
+                                (int16_t)vtx[1].toscreen.x, (int16_t)vtx[1].toscreen.y,
                                 runlen[0]);
 
-                store_scanlines(vtx[1].toscreen.x, vtx[1].toscreen.y,
-                                vtx[2].toscreen.x, vtx[2].toscreen.y,
+                store_scanlines((int16_t)vtx[1].toscreen.x, (int16_t)vtx[1].toscreen.y,
+                                (int16_t)vtx[2].toscreen.x, (int16_t)vtx[2].toscreen.y,
                                 runlen[0] + runlen[1] - 1);
 
                 triangle_fill_shaded(vtx, runlen, world);
@@ -790,7 +766,7 @@ void m3d_renderer_shaded::render(m3d_world &world)
         }
     }
 
-    //Present the rendered lines
+    // Present the rendered lines
     display->show_buffer();
 }
 
@@ -798,35 +774,41 @@ void m3d_renderer_shaded::triangle_fill_shaded(struct m3d_renderer_data vtx[],
                                                unsigned runlen[],
                                                m3d_world &world)
 {
-    unsigned a = 0;
+    unsigned a = 1;
     int16_t *ptscursora, *ptscursorb;
-    uint32_t *output, *outputend;
+    uint32_t *output;
     int16_t *outz;
+    illuminate(vtx[0], world);
+    illuminate(vtx[1], world);
+    illuminate(vtx[2], world);
+    world.camera.transform_to_frustum(vtx[0].vertex);
+    world.camera.transform_to_frustum(vtx[1].vertex);
+    world.camera.transform_to_frustum(vtx[2].vertex);
     float zp0 = vtx[0].vertex.myvector[Z_C];
     float zp1 = vtx[1].vertex.myvector[Z_C];
     float zp2 = vtx[2].vertex.myvector[Z_C];
-    m3d_reciprocal_z_interp_step run0(zp0,
+    m3d_reciprocal_z_interp_step run0(runlen[0],
+                                      zp0,
                                       zp2,
-                                      (float)runlen[0],
                                       vtx[0].lightint,
                                       vtx[2].lightint);
-    m3d_reciprocal_z_interp_step run1(zp0,
+    m3d_reciprocal_z_interp_step run1(runlen[1],
+                                      zp0,
                                       zp1,
-                                      (float)runlen[1],
                                       vtx[0].lightint,
                                       vtx[1].lightint);
-    m3d_reciprocal_z_interp_step run2(zp1,
+    m3d_reciprocal_z_interp_step run2(runlen[2],
+                                      zp1,
                                       zp2,
-                                      (float)runlen[2],
                                       vtx[1].lightint,
                                       vtx[2].lightint);
     m3d_reciprocal_z_interp_step *left, *right;
 
-    m3d_interp_step zrun0((float)runlen[0], zp0, zp2);
-    m3d_interp_step zrun1((float)runlen[1], zp0, zp1);
-    m3d_interp_step zrun2((float)runlen[2], zp1, zp2);
+    m3d_interp_step zrun0(runlen[0], zp0, zp2);
+    m3d_interp_step zrun1(runlen[1], zp0, zp1);
+    m3d_interp_step zrun2(runlen[2], zp1, zp2);
     m3d_interp_step *zleft, *zright;
-    int16_t y = vtx[0].toscreen.y;
+    int16_t y = (int16_t)vtx[0].toscreen.y;
 
     /*
      * check x values to understand who's the left half and who's the right

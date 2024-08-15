@@ -35,11 +35,13 @@ protected:
 	int16_t *scanline;
 	// Z buffer
 	m3d_zbuffer zbuffer;
+	// The list of visible objects
+	std::list<m3d_render_object *> vislist;
 
 	/*
 	 * Sorts an array of 3 points composing a triangle.
 	 * Y is the Y on-screen coordinate of the 3 vertices of the triangle.
-	 * The triangle is geometrically unchanged, its vetices are sorted in descending order
+	 * The triangle is geometrically unchanged, its vertices are sorted in descending order
 	 * (top of screen to bottom of screen).
 	 * */
 	void sort_triangle(struct m3d_renderer_data trianglep[]);
@@ -60,6 +62,8 @@ protected:
 	void illuminate(struct m3d_renderer_data &vtx, m3d_world &world);
 
 	uint32_t *get_video_buffer(int16_t x0, int16_t y0);
+
+	void compute_visible_list_and_sort(m3d_world &world);
 };
 
 class m3d_renderer_wireframe : public m3d_renderer
