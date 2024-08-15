@@ -10,7 +10,7 @@ m3d_vertex::m3d_vertex(const m3d_vertex &other) : position(other.position), norm
 
 void m3d_vertex::print()
 {
-#ifdef NDEBUG
+#ifdef DEBUG
 	cout << "Vertex" << endl
 	     << "   +-> Position ";
 	position.print();

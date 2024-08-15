@@ -190,14 +190,14 @@ void m3d_vector::pitch(float angle)
 
 void m3d_vector::print()
 {
-#ifdef NDEBUG
+#ifdef DEBUG
 	m3d_vector::print(myvector);
 #endif
 }
 
 void m3d_vector::print(const float vector[])
 {
-#ifdef NDEBUG
+#ifdef DEBUG
 	ostringstream temp;
 
 	temp.setf(ios_base::showpoint | ios_base::showpos);
@@ -403,14 +403,14 @@ void m3d_matrix::transform(m3d_vector &veca, m3d_vector &out)
 
 void m3d_matrix::print()
 {
-#ifdef NDEBUG
+#ifdef DEBUG
 	m3d_matrix::print(mymatrix);
 #endif
 }
 
 void m3d_matrix::print(const float matrix[][m3d_vector_size])
 {
-#ifdef NDEBUG
+#ifdef DEBUG
 	ostringstream temp;
 
 	temp.setf(ios_base::showpoint | ios_base::showpos);

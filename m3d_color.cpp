@@ -140,7 +140,7 @@ void m3d_color::add_colors(m3d_color *array[], unsigned num, m3d_color &out)
 
 void m3d_color::print()
 {
-#ifdef NDEBUG
+#ifdef DEBUG
 	cout << "Color RGBA ("
 	     << (int)mycolor.channels[R_CHANNEL]
 	     << ","

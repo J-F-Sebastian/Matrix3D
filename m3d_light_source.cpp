@@ -11,7 +11,7 @@ static inline float m3d_min(float a, float b)
 
 void m3d_ambient_light::print(void)
 {
-#ifdef NDEBUG
+#ifdef DEBUG
 	cout << "Ambient light "
 	     << "Color " << color.getColor() << "Intensity " << sintensity << endl;
 #endif
@@ -36,7 +36,7 @@ float m3d_point_light_source::get_intensity(const m3d_point &objpos, const m3d_p
 
 void m3d_point_light_source::print()
 {
-#ifdef NDEBUG
+#ifdef DEBUG
 	cout.setf(ios_base::showpoint);
 	cout << "Light source" << endl
 	     << "Kc " << Kc << ", Kl " << Kl << ", Kq " << Kq << endl;
@@ -69,7 +69,7 @@ float m3d_spot_light_source::get_intensity(const m3d_point &objpos, const m3d_po
 
 void m3d_spot_light_source::print()
 {
-#ifdef NDEBUG
+#ifdef DEBUG
 	cout.setf(ios_base::showpoint);
 	cout << "Light source" << endl
 	     << "Kc " << Kc << ", Kl " << Kl << ", Kq " << Kq << endl;
