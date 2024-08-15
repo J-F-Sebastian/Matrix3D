@@ -58,33 +58,28 @@ void m3d_world::set_ambient_light_intensity(float intensity)
 
 void m3d_world::sort(list<m3d_render_object *> &_objects_list)
 {
-	list<m3d_render_object *>::iterator itro = _objects_list.begin();
 	m3d_point temp;
 
-	while (itro != _objects_list.end())
+	for (auto itro : _objects_list)
 	{
-		camera.transform_to_viewpoint((*itro)->center, temp);
-		(*itro)->z_sorting = temp.myvector[Z_C];
-		++itro;
+		camera.transform_to_viewpoint(itro->center, temp);
+		itro->z_sorting = temp.myvector[Z_C];
 	}
 	_objects_list.sort(zsortobjects);
 }
 
 void m3d_world::print()
 {
-#ifdef NDEBUG
-	list<m3d_render_object *>::iterator itro;
-	list<m3d_point_light_source *>::iterator itls;
-
+#ifdef DEBUG
 	cout << "World" << endl;
-	for (itro = objects_list.begin(); itro != objects_list.end(); itro++)
+	for (auto itro : objects_list)
 	{
-		(*itro)->print();
+		itro->print();
 	}
 
-	for (itls = lights_list.begin(); itls != lights_list.end(); itls++)
+	for (auto itls : lights_list)
 	{
-		(*itls)->print();
+		itls->print();
 	}
 #endif
 }
