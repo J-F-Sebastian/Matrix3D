@@ -442,18 +442,18 @@ void m3d_renderer_flat::render(m3d_world &world)
 void m3d_renderer_flat::triangle_fill_flat(struct m3d_renderer_data vtx[],
                                            unsigned runlen[])
 {
-    unsigned a = 0;
+    unsigned a = 1;
     int16_t *ptscursora, *ptscursorb;
     uint32_t *output, *outputend;
     int16_t *outz;
     float p0 = vtx[0].vertex.myvector[Z_C];
     float p1 = vtx[1].vertex.myvector[Z_C];
     float p2 = vtx[2].vertex.myvector[Z_C];
-    m3d_interp_step run0((float)runlen[0], p0, p2);
-    m3d_interp_step run1((float)runlen[1], p0, p1);
-    m3d_interp_step run2((float)runlen[2], p1, p2);
+    m3d_interp_step run0(runlen[0], p0, p2);
+    m3d_interp_step run1(runlen[1], p0, p1);
+    m3d_interp_step run2(runlen[2], p1, p2);
     m3d_interp_step *left, *right;
-    int16_t y = vtx[0].toscreen.y;
+    int16_t y = (int16_t)vtx[0].toscreen.y;
 
     /*
      * check x values to understand who's the left half and who's the right
@@ -476,7 +476,7 @@ void m3d_renderer_flat::triangle_fill_flat(struct m3d_renderer_data vtx[],
 
     while (a++ < runlen[1])
     {
-        m3d_interp_step sl((float)(*ptscursorb - *ptscursora + 1), left->get_val(), right->get_val());
+        m3d_interp_step sl((*ptscursorb - *ptscursora + 1), left->get_val(), right->get_val());
         output = display->get_video_buffer(*ptscursora, y);
         outputend = display->get_video_buffer(*ptscursorb++, y);
         outz = zbuffer.get_zbuffer(*ptscursora++, y);
@@ -507,7 +507,7 @@ void m3d_renderer_flat::triangle_fill_flat(struct m3d_renderer_data vtx[],
     a = 1;
     while (a++ < runlen[2])
     {
-        m3d_interp_step sl((float)(*ptscursorb - *ptscursora + 1), left->get_val(), right->get_val());
+        m3d_interp_step sl((*ptscursorb - *ptscursora + 1), left->get_val(), right->get_val());
         output = display->get_video_buffer(*ptscursora, y);
         outputend = display->get_video_buffer(*ptscursorb++, y);
         outz = zbuffer.get_zbuffer(*ptscursora++, y);
@@ -618,11 +618,11 @@ void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
 
     while (a++ < runlen1)
     {
-        fillrunlen = (unsigned)round(xrright->get_val() - xrleft->get_val() + 1.0f);
-        m3d_interp_step sl((float)fillrunlen, zrleft->get_val(), zrright->get_val());
-        output = display->get_video_buffer((unsigned)round(xrleft->get_val()), y);
+        fillrunlen = (unsigned)lroundf(xrright->get_val() - xrleft->get_val() + 1.0f);
+        m3d_interp_step sl(fillrunlen, zrleft->get_val(), zrright->get_val());
+        output = display->get_video_buffer((int16_t)lroundf(xrleft->get_val()), y);
         outputend = output + fillrunlen;
-        outz = zbuffer.get_zbuffer((unsigned)round(xrleft->get_val()), y);
+        outz = zbuffer.get_zbuffer((int16_t)lroundf(xrleft->get_val()), y);
         while (output < outputend)
         {
             if (zbuffer.test(outz, sl.get_int_val()))
@@ -654,11 +654,11 @@ void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
     a = 1;
     while (a++ < runlen2)
     {
-        fillrunlen = (unsigned)round(xrright->get_val() - xrleft->get_val() + 1.0f);
-        m3d_interp_step sl((float)fillrunlen, zrleft->get_val(), zrright->get_val());
-        output = display->get_video_buffer((unsigned)round(xrleft->get_val()), y);
+        fillrunlen = (unsigned)lroundf(xrright->get_val() - xrleft->get_val() + 1.0f);
+        m3d_interp_step sl(fillrunlen, zrleft->get_val(), zrright->get_val());
+        output = display->get_video_buffer((int16_t)lroundf(xrleft->get_val()), y);
         outputend = output + fillrunlen;
-        outz = zbuffer.get_zbuffer((unsigned)round(xrleft->get_val()), y);
+        outz = zbuffer.get_zbuffer((int16_t)lroundf(xrleft->get_val()), y);
         while (output < outputend)
         {
             if (zbuffer.test(outz, sl.get_int_val()))
@@ -833,17 +833,19 @@ void m3d_renderer_shaded::triangle_fill_shaded(struct m3d_renderer_data vtx[],
 
     while (a++ < runlen[1])
     {
-        m3d_reciprocal_z_interp_step sl(left->get_z(),
+        m3d_reciprocal_z_interp_step sl((*ptscursorb - *ptscursora + 1),
+                                        left->get_z(),
                                         right->get_z(),
-                                        (float)(*ptscursorb - *ptscursora + 1),
                                         left->get_paramvalue(),
                                         right->get_paramvalue());
-        m3d_interp_step zsl((float)(*ptscursorb - *ptscursora + 1), zleft->get_val(), zright->get_val());
+        m3d_interp_step zsl((*ptscursorb - *ptscursora + 1), zleft->get_val(), zright->get_val());
         output = display->get_video_buffer(*ptscursora, y);
-        outputend = display->get_video_buffer(*ptscursorb++, y);
-        outz = zbuffer.get_zbuffer(*ptscursora++, y);
+        outz = zbuffer.get_zbuffer(*ptscursora, y);
+        ptscursora++;
+        // ptscursorb++;
 
-        while (output <= outputend)
+        // while (sl.last_step() == false)
+        while (output <= display->get_video_buffer(*ptscursorb++, y))
         {
             if (zbuffer.test(outz, zsl.get_int_val()))
             {
@@ -873,16 +875,17 @@ void m3d_renderer_shaded::triangle_fill_shaded(struct m3d_renderer_data vtx[],
     a = 1;
     while (a++ < runlen[2])
     {
-        m3d_reciprocal_z_interp_step sl(left->get_z(),
+        m3d_reciprocal_z_interp_step sl((*ptscursorb - *ptscursora + 1),
+                                        left->get_z(),
                                         right->get_z(),
-                                        (float)(*ptscursorb - *ptscursora + 1),
                                         left->get_paramvalue(),
                                         right->get_paramvalue());
-        m3d_interp_step zsl((float)(*ptscursorb - *ptscursora + 1), zleft->get_val(), zright->get_val());
+        m3d_interp_step zsl((*ptscursorb - *ptscursora + 1), zleft->get_val(), zright->get_val());
         output = display->get_video_buffer(*ptscursora, y);
-        outputend = display->get_video_buffer(*ptscursorb++, y);
         outz = zbuffer.get_zbuffer(*ptscursora++, y);
-        while (output <= outputend)
+        // ptscursorb++;
+        // while (sl.last_step() == false)
+        while (output <= display->get_video_buffer(*ptscursorb++, y))
         {
             if (zbuffer.test(outz, zsl.get_int_val()))
             {
@@ -907,19 +910,25 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(struct m3d_renderer_data 
                                                        unsigned runlen[],
                                                        m3d_world &world)
 {
-    unsigned a = 0;
+    unsigned a = 1;
     int16_t *ptscursora, *ptscursorb;
     uint32_t *output, *outputend;
     int16_t *outz;
+    illuminate(vtx[0], world);
+    illuminate(vtx[1], world);
+    illuminate(vtx[2], world);
+    world.camera.transform_to_frustum(vtx[0].vertex);
+    world.camera.transform_to_frustum(vtx[1].vertex);
+    world.camera.transform_to_frustum(vtx[2].vertex);
     m3d_interp_step *left, *right, *leftz, *rightz;
-    m3d_interp_step lightint0((float)runlen[0], vtx[0].lightint, vtx[2].lightint);
-    m3d_interp_step lightint1((float)runlen[1], vtx[0].lightint, vtx[1].lightint);
-    m3d_interp_step lightint2((float)runlen[2], vtx[1].lightint, vtx[2].lightint);
-    m3d_interp_step interpz0((float)runlen[0], vtx[0].vertex.myvector[Z_C], vtx[2].vertex.myvector[Z_C]);
-    m3d_interp_step interpz1((float)runlen[1], vtx[0].vertex.myvector[Z_C], vtx[1].vertex.myvector[Z_C]);
-    m3d_interp_step interpz2((float)runlen[2], vtx[1].vertex.myvector[Z_C], vtx[2].vertex.myvector[Z_C]);
+    m3d_interp_step lightint0(runlen[0], vtx[0].lightint, vtx[2].lightint);
+    m3d_interp_step lightint1(runlen[1], vtx[0].lightint, vtx[1].lightint);
+    m3d_interp_step lightint2(runlen[2], vtx[1].lightint, vtx[2].lightint);
+    m3d_interp_step interpz0(runlen[0], vtx[0].vertex.myvector[Z_C], vtx[2].vertex.myvector[Z_C]);
+    m3d_interp_step interpz1(runlen[1], vtx[0].vertex.myvector[Z_C], vtx[1].vertex.myvector[Z_C]);
+    m3d_interp_step interpz2(runlen[2], vtx[1].vertex.myvector[Z_C], vtx[2].vertex.myvector[Z_C]);
 
-    int16_t y = vtx[0].toscreen.y;
+    int16_t y = (int16_t)vtx[0].toscreen.y;
 
     /*
      * check x values to understand who's the left half and who's the right
@@ -946,8 +955,8 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(struct m3d_renderer_data 
 
     while (a++ < runlen[1])
     {
-        m3d_interp_step sl((float)(*ptscursorb - *ptscursora + 1), left->get_val(), right->get_val());
-        m3d_interp_step z((float)(*ptscursorb - *ptscursora + 1), leftz->get_val(), rightz->get_val());
+        m3d_interp_step sl((*ptscursorb - *ptscursora + 1), left->get_val(), right->get_val());
+        m3d_interp_step z((*ptscursorb - *ptscursora + 1), leftz->get_val(), rightz->get_val());
         output = display->get_video_buffer(*ptscursora, y);
         outputend = display->get_video_buffer(*ptscursorb++, y);
         outz = zbuffer.get_zbuffer(*ptscursora++, y);
@@ -981,8 +990,8 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(struct m3d_renderer_data 
     a = 1;
     while (a++ < runlen[2])
     {
-        m3d_interp_step sl((float)(*ptscursorb - *ptscursora + 1), left->get_val(), right->get_val());
-        m3d_interp_step z((float)(*ptscursorb - *ptscursora + 1), leftz->get_val(), rightz->get_val());
+        m3d_interp_step sl((*ptscursorb - *ptscursora + 1), left->get_val(), right->get_val());
+        m3d_interp_step z((*ptscursorb - *ptscursora + 1), leftz->get_val(), rightz->get_val());
         output = display->get_video_buffer(*ptscursora, y);
         outputend = display->get_video_buffer(*ptscursorb++, y);
         outz = zbuffer.get_zbuffer(*ptscursora++, y);
@@ -1011,45 +1020,45 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(struct m3d_renderer_data vt
                                                      unsigned runlen[],
                                                      m3d_world &world)
 {
-    unsigned a = 0;
+    unsigned a = 1;
     int16_t *ptscursora, *ptscursorb;
     uint32_t *output, *outputend;
     int16_t *outz;
     struct m3d_renderer_data temp;
 
-    m3d_reciprocal_z_interpv_step nrun0(vtx[0].vertex.myvector[Z_C],
+    m3d_reciprocal_z_interpv_step nrun0(runlen[0],
+                                        vtx[0].vertex.myvector[Z_C],
                                         vtx[2].vertex.myvector[Z_C],
-                                        (float)runlen[0],
                                         vtx[0].normal,
                                         vtx[2].normal);
-    m3d_reciprocal_z_interpv_step nrun1(vtx[0].vertex.myvector[Z_C],
+    m3d_reciprocal_z_interpv_step nrun1(runlen[1],
+                                        vtx[0].vertex.myvector[Z_C],
                                         vtx[1].vertex.myvector[Z_C],
-                                        (float)runlen[1],
                                         vtx[0].normal,
                                         vtx[1].normal);
-    m3d_reciprocal_z_interpv_step nrun2(vtx[1].vertex.myvector[Z_C],
+    m3d_reciprocal_z_interpv_step nrun2(runlen[2],
+                                        vtx[1].vertex.myvector[Z_C],
                                         vtx[2].vertex.myvector[Z_C],
-                                        (float)runlen[2],
                                         vtx[1].normal,
                                         vtx[2].normal);
-    m3d_reciprocal_z_interpv_step vrun0(vtx[0].vertex.myvector[Z_C],
+    m3d_reciprocal_z_interpv_step vrun0(runlen[0],
+                                        vtx[0].vertex.myvector[Z_C],
                                         vtx[2].vertex.myvector[Z_C],
-                                        (float)runlen[0],
                                         vtx[0].vertex,
                                         vtx[2].vertex);
-    m3d_reciprocal_z_interpv_step vrun1(vtx[0].vertex.myvector[Z_C],
+    m3d_reciprocal_z_interpv_step vrun1(runlen[1],
+                                        vtx[0].vertex.myvector[Z_C],
                                         vtx[1].vertex.myvector[Z_C],
-                                        (float)runlen[1],
                                         vtx[0].vertex,
                                         vtx[1].vertex);
-    m3d_reciprocal_z_interpv_step vrun2(vtx[1].vertex.myvector[Z_C],
+    m3d_reciprocal_z_interpv_step vrun2(runlen[2],
+                                        vtx[1].vertex.myvector[Z_C],
                                         vtx[2].vertex.myvector[Z_C],
-                                        (float)runlen[2],
                                         vtx[1].vertex,
                                         vtx[2].vertex);
 
     m3d_reciprocal_z_interpv_step *nleft, *nright, *vleft, *vright;
-    int16_t y = vtx[0].toscreen.y;
+    int16_t y = (int16_t)vtx[0].toscreen.y;
 
     /*
      * check x values to understand who's the left half and who's the right
@@ -1076,14 +1085,14 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(struct m3d_renderer_data vt
 
     while (a++ < runlen[1])
     {
-        m3d_reciprocal_z_interpv_step norm(nleft->get_z(),
+        m3d_reciprocal_z_interpv_step norm((*ptscursorb - *ptscursora + 1),
+                                           nleft->get_z(),
                                            nright->get_z(),
-                                           (float)(*ptscursorb - *ptscursora + 1),
                                            nleft->get_vectorvalue(),
                                            nright->get_vectorvalue());
-        m3d_reciprocal_z_interpv_step pos(vleft->get_z(),
+        m3d_reciprocal_z_interpv_step pos((*ptscursorb - *ptscursora + 1),
+                                          vleft->get_z(),
                                           vright->get_z(),
-                                          (float)(*ptscursorb - *ptscursora + 1),
                                           vleft->get_vectorvalue(),
                                           vright->get_vectorvalue());
         output = display->get_video_buffer(*ptscursora, y);
@@ -1125,14 +1134,14 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(struct m3d_renderer_data vt
     a = 1;
     while (a++ < runlen[2])
     {
-        m3d_reciprocal_z_interpv_step norm(nleft->get_z(),
+        m3d_reciprocal_z_interpv_step norm((*ptscursorb - *ptscursora + 1),
+                                           nleft->get_z(),
                                            nright->get_z(),
-                                           (float)(*ptscursorb - *ptscursora + 1),
                                            nleft->get_vectorvalue(),
                                            nright->get_vectorvalue());
-        m3d_reciprocal_z_interpv_step pos(vleft->get_z(),
+        m3d_reciprocal_z_interpv_step pos((*ptscursorb - *ptscursora + 1),
+                                          vleft->get_z(),
                                           vright->get_z(),
-                                          (float)(*ptscursorb - *ptscursora + 1),
                                           vleft->get_vectorvalue(),
                                           vright->get_vectorvalue());
         output = display->get_video_buffer(*ptscursora, y);
