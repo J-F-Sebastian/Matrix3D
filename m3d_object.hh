@@ -8,8 +8,8 @@
 #include "m3d_color.hh"
 #include "m3d_camera.hh"
 
-#define M3D_MAX_VERTICES (1024)
-#define M3D_MAX_TRIANGLES (1024 * 4)
+#define M3D_MAX_VERTICES (10240)
+#define M3D_MAX_TRIANGLES (10240 * 4)
 
 /*
  * This data structure is used to create a mesh of points,
@@ -45,7 +45,7 @@ public:
 		index[2] = other.index[2];
 	}
 
-	~m3d_triangle(){};
+	~m3d_triangle() {};
 
 	void rotate(m3d_matrix &rotation);
 
@@ -64,9 +64,9 @@ public:
 		       direction(),
 		       center(),
 		       z_sorting(0.0f),
-		       visibility_uptodate(false){};
+		       visibility_uptodate(false) {};
 	/** Default destructor */
-	~m3d_object(){};
+	~m3d_object() {};
 	/** Copy constructor
 	 *  \param other Object to copy from
 	 */
@@ -77,7 +77,7 @@ public:
 					      direction(other.direction),
 					      center(other.center),
 					      z_sorting(0.0f),
-					      visibility_uptodate(false){};
+					      visibility_uptodate(false) {};
 
 	// Set vertices, mesh, their normals and cleanup bitmaps
 	int create(struct m3d_input_point *_vertices,
@@ -142,13 +142,13 @@ public:
 	};
 
 	/** Default constructor */
-	m3d_render_object() : m3d_object(), color(){};
+	m3d_render_object() : m3d_object(), color() {};
 	/** Default destructor */
-	virtual ~m3d_render_object(){};
+	virtual ~m3d_render_object() {};
 	/** Copy constructor
 	 *  \param other Object to copy from
 	 */
-	m3d_render_object(const m3d_render_object &other) : m3d_object(other), color(other.color){};
+	m3d_render_object(const m3d_render_object &other) : m3d_object(other), color(other.color) {};
 
 	// creates an object starting from a m3d_trimesh array.
 	// vertices points to an array of m3d_point structs, describing the geometry of all

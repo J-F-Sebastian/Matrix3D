@@ -26,8 +26,6 @@ int m3d_object::create(struct m3d_input_point *_vertices,
 		       struct m3d_input_trimesh *_mesh,
 		       const uint32_t meshnum)
 {
-	vector<m3d_vertex>::iterator it;
-	vector<m3d_triangle>::iterator it2;
 	m3d_vector a, b;
 
 	if (_vertices && vertnum && (vertnum < M3D_MAX_VERTICES) && vertices.empty())
@@ -41,9 +39,9 @@ int m3d_object::create(struct m3d_input_point *_vertices,
 			cerr << "Out of memory " << e.what() << endl;
 			return (ENOMEM);
 		}
-		for (it = vertices.begin(); it != vertices.end(); it++)
+		for (auto &it : vertices)
 		{
-			it->position = _vertices->vector;
+			it.position = _vertices->vector;
 			_vertices++;
 		}
 		vertex_visible.reset();
@@ -65,11 +63,11 @@ int m3d_object::create(struct m3d_input_point *_vertices,
 			return (ENOMEM);
 		}
 
-		for (it2 = mesh.begin(); it2 != mesh.end(); it2++, _mesh++)
+		for (auto &it : mesh)
 		{
-			it2->index[0] = _mesh->index[0];
-			it2->index[1] = _mesh->index[1];
-			it2->index[2] = _mesh->index[2];
+			it.index[0] = _mesh->index[0];
+			it.index[1] = _mesh->index[1];
+			it.index[2] = _mesh->index[2];
 			/*
 			 * compute the surface normal.
 			 * vertices will be used this way:
@@ -84,7 +82,8 @@ int m3d_object::create(struct m3d_input_point *_vertices,
 			b.subtract(vertices.at(_mesh->index[0]).position);
 			a.cross_product(b);
 			a.normalize();
-			it2->normal = a;
+			it.normal = a;
+			_mesh++;
 		}
 		triangle_visible.reset();
 	}
@@ -138,16 +137,15 @@ void m3d_object::move(const m3d_vector &newposition)
 
 void m3d_object::print()
 {
-#ifdef NDEBUG
-	vector<m3d_vertex>::iterator it;
-	vector<m3d_triangle>::iterator it2;
+#ifdef DEBUG
 	ostringstream tmp;
 	unsigned i;
 
 	cout << "Object" << endl;
-	for (it = vertices.begin(), i = 0; it != vertices.end(); it++, i++)
+	i = 0;
+	for (auto &it : vertices)
 	{
-		if (vertex_visible[i])
+		if (vertex_visible[i++])
 		{
 			cout << " V, ";
 		}
@@ -155,22 +153,23 @@ void m3d_object::print()
 		{
 			cout << "    ";
 		}
-		it->print();
+		it.print();
 	}
 	cout << "Center ---> ";
 	center.print();
 	cout << "Triangle Mesh" << endl;
-	for (it2 = mesh.begin(), i = 0; it2 != mesh.end(); it2++, i++)
+	i = 0;
+	for (auto &it : mesh)
 	{
-		tmp << "(" << it2->index[0] << "," << it2->index[1] << "," << it2->index[2] << ") ,";
-		if (triangle_visible[i])
+		tmp << "(" << it.index[0] << "," << it.index[1] << "," << it.index[2] << ") ,";
+		if (triangle_visible[i++])
 		{
 			tmp << " V,";
 		}
 		tmp << " Normal ---> ";
 		cout << tmp.str();
 		tmp.str("");
-		it2->normal.print();
+		it.normal.print();
 	}
 	cout << endl;
 #endif
@@ -179,11 +178,10 @@ void m3d_object::print()
 void m3d_object::compute_center()
 {
 	float part = 1.0f / (float)vertices.size();
-	vector<m3d_vertex>::iterator it;
 
-	for (it = vertices.begin(); it != vertices.end(); it++)
+	for (auto &it : vertices)
 	{
-		center.add(it->position);
+		center.add(it.position);
 	}
 
 	center.myvector[X_C] *= part;
@@ -194,21 +192,16 @@ void m3d_object::compute_center()
 
 void m3d_object::update_object(m3d_matrix &transform)
 {
-	vector<m3d_vertex>::iterator it = vertices.begin();
-	vector<m3d_triangle>::iterator it2 = mesh.begin();
-
-	while (it != vertices.end())
+	for (auto &it : vertices)
 	{
-		transform.rotate(it->position, it->position);
-		transform.rotate(it->normal, it->normal);
-		++it;
+		transform.rotate(it.position, it.position);
+		transform.rotate(it.normal, it.normal);
 	}
 
 	/* update triangle surfaces' normals */
-	while (it2 != mesh.end())
+	for (auto &it : mesh)
 	{
-		it2->rotate(transform);
-		++it2;
+		it.rotate(transform);
 	}
 
 	/* update object's direction */
@@ -217,9 +210,8 @@ void m3d_object::update_object(m3d_matrix &transform)
 
 void m3d_object::compute_visibility(m3d_camera &viewpoint)
 {
-	vector<m3d_triangle>::iterator it;
 	m3d_point temp;
-	unsigned i;
+	unsigned i = 0;
 
 	if (visibility_uptodate)
 	{
@@ -232,18 +224,19 @@ void m3d_object::compute_visibility(m3d_camera &viewpoint)
 	 * Compute visibility by adding center to the first triangle vertex,
 	 * then subtracting the viewpoint, then invoking is_visible.
 	 */
-	for (it = mesh.begin(), i = 0; it != mesh.end(); it++, i++)
+	for (auto &it : mesh)
 	{
-		temp = vertices.at(it->index[0]).position;
+		temp = vertices.at(it.index[0]).position;
 		// temp is now in world coordinates
 		temp.add(center);
-		triangle_visible[i] = viewpoint.is_visible(temp, it->normal);
+		triangle_visible[i] = viewpoint.is_visible(temp, it.normal);
 		if (triangle_visible[i])
 		{
-			vertex_visible[it->index[0]] = true;
-			vertex_visible[it->index[1]] = true;
-			vertex_visible[it->index[2]] = true;
+			vertex_visible[it.index[0]] = true;
+			vertex_visible[it.index[1]] = true;
+			vertex_visible[it.index[2]] = true;
 		}
+		++i;
 	}
 
 	visibility_uptodate = true;
@@ -259,8 +252,6 @@ int m3d_render_object::create(struct m3d_input_point *_vertices,
 			      const uint32_t meshnum,
 			      m3d_color &_color)
 {
-	vector<m3d_triangle>::iterator it;
-	vector<m3d_vertex>::iterator it2;
 	int retcode;
 
 	retcode = m3d_object::create(_vertices, vertnum, _mesh, meshnum);
@@ -275,18 +266,18 @@ int m3d_render_object::create(struct m3d_input_point *_vertices,
 	// Triangles' normals are orthogonal to the surface, Vertices' normals
 	// are the normalized sum of surfaces' normals
 	//
-	for (it = mesh.begin(); it != mesh.end(); it++)
+	for (auto &it : mesh)
 	{
-		vertices.at(it->index[0]).normal.add(it->normal);
-		vertices.at(it->index[1]).normal.add(it->normal);
-		vertices.at(it->index[2]).normal.add(it->normal);
+		vertices.at(it.index[0]).normal.add(it.normal);
+		vertices.at(it.index[1]).normal.add(it.normal);
+		vertices.at(it.index[2]).normal.add(it.normal);
 	}
 
 	// Normalize
-	for (it2 = vertices.begin(); it2 != vertices.end(); it2++)
+	for (auto &it : vertices)
 	{
-		it2->normal.print();
-		it2->normal.normalize();
+		it.normal.print();
+		it.normal.normalize();
 	}
 
 	color = _color;
@@ -295,7 +286,7 @@ int m3d_render_object::create(struct m3d_input_point *_vertices,
 
 void m3d_render_object::print()
 {
-#ifdef NDEBUG
+#ifdef DEBUG
 	cout << "Render Object" << endl;
 	m3d_object::print();
 	color.print();
