@@ -308,35 +308,33 @@ void m3d_renderer::compute_visible_list_and_sort(m3d_world &world)
 
 void m3d_renderer_wireframe::render(m3d_world &world)
 {
-    list<m3d_render_object *>::iterator itro;
-    vector<m3d_triangle>::iterator triangle;
     m3d_point temp;
     m3d_color ctemp;
-    SDL_Point toscreen[4 * M3D_MAX_TRIANGLES];
+    SDL_Point toscreen[M3D_MAX_VERTICES];
     unsigned i, j, k;
 
-    //Fill the surface black
-    display->clear_renderer();
-    for (itro = world.objects_list.begin(); itro != world.objects_list.end(); itro++)
-    {
-        (*itro)->compute_visibility(world.camera);
-        if ((*itro)->triangle_visible.none())
-            continue;
+    // Compute visible objects
+    compute_visible_list_and_sort(world);
 
-        ctemp = (*itro)->color;
+    // Fill the surface black
+    display->clear_renderer();
+    for (auto itro : vislist)
+    {
+        ctemp = itro->color;
         display->set_color(ctemp.getChannel(m3d_color::R_CHANNEL),
                            ctemp.getChannel(m3d_color::G_CHANNEL),
                            ctemp.getChannel(m3d_color::B_CHANNEL));
 
-        for (i = 0, k = 0, triangle = (*itro)->mesh.begin(); triangle != (*itro)->mesh.end(); i++, triangle++)
+        i = k = 0;
+        for (auto &triangle : itro->mesh)
         {
-            if ((*itro)->triangle_visible[i])
+            if (itro->triangle_visible[i++])
             {
                 for (j = 0; j < 3; j++)
                 {
-                    temp = (*itro)->vertices[triangle->index[j]].position;
-                    temp.add((*itro)->center);
-                    world.camera.transform_and_project_to_screen(temp, toscreen[k++]);
+                    temp = itro->vertices[triangle.index[j]].position;
+                    temp.add(itro->center);
+                    world.camera.transform_and_project_to_screen(temp, temp, toscreen[k++]);
                 }
                 toscreen[k] = toscreen[k - 3];
                 k++;
@@ -345,7 +343,7 @@ void m3d_renderer_wireframe::render(m3d_world &world)
         display->draw_lines(toscreen, k);
     }
 
-    //Present the rendered lines
+    // Present the rendered lines
     display->show_renderer();
 }
 
