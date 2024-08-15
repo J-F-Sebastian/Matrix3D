@@ -4,6 +4,7 @@
 #include <cfloat>
 
 #include "m3d_renderer.hh"
+#include "m3d_interp.hh"
 
 using namespace std;
 
