@@ -20,7 +20,7 @@ public:
 	};
 
 	/** Default constructor */
-	m3d_renderer() : display(nullptr){};
+	m3d_renderer() : display(nullptr) {};
 	m3d_renderer(m3d_display *disp);
 
 	/** Default destructor */
@@ -70,11 +70,11 @@ class m3d_renderer_wireframe : public m3d_renderer
 {
 public:
 	/** Default constructor */
-	m3d_renderer_wireframe() : m3d_renderer(){};
-	m3d_renderer_wireframe(m3d_display *disp) : m3d_renderer(disp){};
+	m3d_renderer_wireframe() : m3d_renderer() {};
+	m3d_renderer_wireframe(m3d_display *disp) : m3d_renderer(disp) {};
 
 	/** Default destructor */
-	virtual ~m3d_renderer_wireframe(){};
+	virtual ~m3d_renderer_wireframe() {};
 
 	virtual void render(m3d_world &world);
 };
@@ -83,11 +83,11 @@ class m3d_renderer_flat : public m3d_renderer
 {
 public:
 	/** Default constructor */
-	m3d_renderer_flat() : m3d_renderer(){};
-	m3d_renderer_flat(m3d_display *disp) : m3d_renderer(disp){};
+	m3d_renderer_flat() : m3d_renderer() {};
+	m3d_renderer_flat(m3d_display *disp) : m3d_renderer(disp) {};
 
 	/** Default destructor */
-	virtual ~m3d_renderer_flat(){};
+	virtual ~m3d_renderer_flat() {};
 
 	virtual void render(m3d_world &world);
 
@@ -100,11 +100,11 @@ class m3d_renderer_flatf : public m3d_renderer
 {
 public:
 	/** Default constructor */
-	m3d_renderer_flatf() : m3d_renderer(){};
-	m3d_renderer_flatf(m3d_display *disp) : m3d_renderer(disp){};
+	m3d_renderer_flatf() : m3d_renderer() {};
+	m3d_renderer_flatf(m3d_display *disp) : m3d_renderer(disp) {};
 
 	/** Default destructor */
-	virtual ~m3d_renderer_flatf(){};
+	virtual ~m3d_renderer_flatf() {};
 
 	virtual void render(m3d_world &world);
 
@@ -117,11 +117,11 @@ class m3d_renderer_shaded : public m3d_renderer
 {
 public:
 	/** Default constructor */
-	m3d_renderer_shaded() : m3d_renderer(){};
-	m3d_renderer_shaded(m3d_display *disp) : m3d_renderer(disp){};
+	m3d_renderer_shaded() : m3d_renderer() {};
+	m3d_renderer_shaded(m3d_display *disp) : m3d_renderer(disp) {};
 
 	/** Default destructor */
-	virtual ~m3d_renderer_shaded(){};
+	virtual ~m3d_renderer_shaded() {};
 
 	virtual void render(m3d_world &world);
 
@@ -136,11 +136,11 @@ class m3d_renderer_shaded_gouraud : public m3d_renderer_shaded
 {
 public:
 	/** Default constructor */
-	m3d_renderer_shaded_gouraud() : m3d_renderer_shaded(){};
-	m3d_renderer_shaded_gouraud(m3d_display *disp) : m3d_renderer_shaded(disp){};
+	m3d_renderer_shaded_gouraud() : m3d_renderer_shaded() {};
+	m3d_renderer_shaded_gouraud(m3d_display *disp) : m3d_renderer_shaded(disp) {};
 
 	/** Default destructor */
-	virtual ~m3d_renderer_shaded_gouraud(){};
+	virtual ~m3d_renderer_shaded_gouraud() {};
 
 protected:
 	virtual void triangle_fill_shaded(struct m3d_renderer_data vtx[],
@@ -153,11 +153,11 @@ class m3d_renderer_shaded_phong : public m3d_renderer_shaded
 {
 public:
 	/** Default constructor */
-	m3d_renderer_shaded_phong() : m3d_renderer_shaded(){};
-	m3d_renderer_shaded_phong(m3d_display *disp) : m3d_renderer_shaded(disp){};
+	m3d_renderer_shaded_phong() : m3d_renderer_shaded() {};
+	m3d_renderer_shaded_phong(m3d_display *disp) : m3d_renderer_shaded(disp) {};
 
 	/** Default destructor */
-	virtual ~m3d_renderer_shaded_phong(){};
+	virtual ~m3d_renderer_shaded_phong() {};
 
 protected:
 	virtual void triangle_fill_shaded(struct m3d_renderer_data vtx[],

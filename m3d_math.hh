@@ -213,7 +213,7 @@ public:
 	m3d_axis() : m3d_vector() { normalize(); };
 	explicit m3d_axis(const float values[]) : m3d_vector(values) { normalize(); };
 	m3d_axis(const m3d_axis &other) : m3d_vector(other) { normalize(); };
-	~m3d_axis(){};
+	~m3d_axis() {};
 
 	float x(void)
 	{
