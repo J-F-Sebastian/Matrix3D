@@ -22,7 +22,7 @@ m3d_renderer::~m3d_renderer()
     delete scanline;
 }
 
-m3d_renderer::m3d_renderer(m3d_display *disp) : display(disp), zbuffer(disp->get_xmax(), disp->get_ymax())
+m3d_renderer::m3d_renderer(m3d_display *disp) : display(disp), zbuffer((int16_t)disp->get_xmax(), (int16_t)disp->get_ymax())
 {
     scanline = new int16_t[display->get_xmax() * display->get_ymax()];
 }
@@ -32,7 +32,9 @@ m3d_renderer::m3d_renderer(m3d_display *disp) : display(disp), zbuffer(disp->get
  */
 void m3d_renderer::render(m3d_world & /*world*/)
 {
-    //Update the surface
+    // Fill the surface black
+    display->clear_renderer();
+    // Update the surface
     display->show_buffer();
 }
 
