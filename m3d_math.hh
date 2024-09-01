@@ -79,7 +79,6 @@ public:
 		myvector[Y_C] = other.myvector[Y_C];
 		myvector[Z_C] = other.myvector[Z_C];
 		myvector[T_C] = other.myvector[T_C];
-		// myvector[T_C] = 0.0f;
 	}
 
 	void operator=(const float other[])
@@ -87,7 +86,6 @@ public:
 		myvector[X_C] = other[X_C];
 		myvector[Y_C] = other[Y_C];
 		myvector[Z_C] = other[Z_C];
-		// myvector[T_C] = other[T_C];
 		myvector[T_C] = 0.0f;
 	}
 
@@ -99,12 +97,14 @@ public:
 	}
 
 	/*
-	 * perform cross product myvector X veca and store the result in myvector
+	 * perform cross product myvector X veca and store the result in myvector.
+	 * NOTE: the value of myvector is altered.
 	 */
 	void cross_product(const m3d_vector &veca);
 
 	/*
-	 * perform dot product myvector * veca and return the scalar result
+	 * perform dot product myvector * veca and return the scalar result.
+	 * NOTE: the value of myvector is NOT altered.
 	 */
 	float dot_product(const m3d_vector &veca);
 
@@ -265,31 +265,9 @@ public:
 	m3d_matrix(const float values[][m3d_vector_size]);
 	m3d_matrix(const m3d_matrix &mat);
 
-	void operator=(const m3d_matrix &other)
-	{
-		unsigned i, j;
+	void operator=(const m3d_matrix &other);
 
-		for (i = 0; i < m3d_vector_size; i++)
-		{
-			for (j = 0; j < m3d_vector_size; j++)
-			{
-				mymatrix[i][j] = other.mymatrix[i][j];
-			}
-		}
-	}
-
-	void operator=(const float other[][m3d_vector_size])
-	{
-		unsigned i, j;
-
-		for (i = 0; i < m3d_vector_size; i++)
-		{
-			for (j = 0; j < m3d_vector_size; j++)
-			{
-				mymatrix[i][j] = other[i][j];
-			}
-		}
-	}
+	void operator=(const float other[][m3d_vector_size]);
 
 	/*
 	 * Insert a vector at the specified row; existing values are overwritten
@@ -297,12 +275,14 @@ public:
 	void insert(const m3d_vector &vector, unsigned row);
 
 	/*
-	 * perform multiplication of 2 matrices, rows by columns. Store the result in mymatrix
+	 * perform multiplication of 2 matrices, rows by columns.
+	 * NOTE: Store the result in mymatrix.
 	 */
 	void multiply(m3d_matrix &mat);
 
 	/*
-	 * perform multiplication of mymatrix and a vector. Store the result in vector
+	 * perform multiplication of mymatrix and a vector.
+	 * NOTE: Store the result in vector. mymatrix is not altered.
 	 */
 	void multiply(m3d_vector &vector);
 
@@ -377,23 +357,6 @@ public:
 #else
 	float mymatrix[m3d_vector_size][m3d_vector_size] __attribute__((aligned(16)));
 #endif
-
-private:
-	static inline float row_by_col(const float a[][m3d_vector_size],
-				       const float b[][m3d_vector_size],
-				       unsigned i,
-				       unsigned j)
-	{
-		float ret = 0.0f;
-		unsigned k;
-
-		for (k = 0; k < m3d_vector_size; k++)
-		{
-			ret += a[i][k] * b[k][j];
-		}
-
-		return ret;
-	}
 };
 
 class m3d_matrix_roll : public m3d_matrix

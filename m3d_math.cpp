@@ -10,6 +10,28 @@ using namespace std;
 
 static const float INV_RAD = (float)M_PI / 180.0f;
 
+/*
+ * Utility function to multiply a row and a column in a matrix.
+ * NOTE: Remember the order used in this code, rows carry homogeneus
+ * coordinates (all x, all y, all z, all t) while columns carry
+ * the vectors composing the matrix.
+ */
+static inline float row_by_col(const float a[][m3d_vector_size],
+			       const float b[][m3d_vector_size],
+			       unsigned i,
+			       unsigned j)
+{
+	float ret = 0.0f;
+	unsigned k;
+
+	for (k = 0; k < m3d_vector_size; k++)
+	{
+		ret += a[i][k] * b[k][j];
+	}
+
+	return ret;
+}
+
 /**********************************************************************************************
  **********************************************************************************************
  **********************************************************************************************
@@ -204,6 +226,8 @@ void m3d_vector::print(const float vector[])
 	temp.precision(6);
 	temp << "[X " << vector[X_C] << " Y " << vector[Y_C] << " Z " << vector[Z_C] << " T " << vector[T_C] << "]" << endl;
 	cout << temp.str();
+#else
+	(void)vector;
 #endif
 }
 
@@ -294,6 +318,16 @@ m3d_matrix::m3d_matrix(const m3d_matrix &mat)
 	(*this) = mat;
 }
 
+void m3d_matrix::operator=(const m3d_matrix &other)
+{
+	memcpy(mymatrix, (void *)other.mymatrix, sizeof(mymatrix));
+}
+
+void m3d_matrix::operator=(const float other[][m3d_vector_size])
+{
+	memcpy(mymatrix, other, sizeof(mymatrix));
+}
+
 void m3d_matrix::insert(const m3d_vector &vector, unsigned row)
 {
 	if ((X_C == row) || (Y_C == row) || (Z_C == row) || (T_C == row))
@@ -378,14 +412,34 @@ void m3d_matrix::rotate(m3d_vector &veca, m3d_vector &out)
 }
 
 /*
- * perform rotation and motion of a vector, the matrix need to be build
- * this way:
+ * performs
+ *
+ * 1) rotation and motion of a point
+ * 2) rotation of a vector
+ *
+ * the matrix need to be column first (columns carry the vectors)
  *
  *   Xr1 Xr2 Xr3 0
  *   Yr1 Yr2 Yr3 0
  *   Zr1 Zr2 Zr3 0
  *   Xt   Yt  Zt 1
  *
+ * A vector has the T value set to 0.0f, so the last row of values does not
+ * affect the transformation, i.e. a vector cannot be translated but can only be rotated.
+ * A point has the T value set to 1.0f, so the last row of values is effectively
+ * added to the rotation, while the output of the T value of the point is 1.0f.
+ *
+ * Examples
+ *
+ * Point [Xp, Yp, Zp, 1]
+ *
+ * Output Point Xp' = Xp*Xr1 + Yp*Yr1 + Zp*Zr1 + 1.0*Xt -> Xt is added as-is
+ * Output Point Tp' = Xp*0.0 + Yp*0.0 + Zp*0.0 + 1.0*1.0 -> Still 1.0
+ *
+ * Vector [Xv, Yv, Zv, 0]
+ *
+ * Output Vector Xv' = Xv*Xr1 + Yv*Yr1 + Zv*Zr1 + 0.0*Xt -> Xt is ignored
+ * Output Vector Tv' = Xv*0.0 + Yv*0.0 + Zv*0.0 + 0.0*1.0 -> Still 0.0
  */
 void m3d_matrix::transform(m3d_vector &veca, m3d_vector &out)
 {
@@ -422,6 +476,8 @@ void m3d_matrix::print(const float matrix[][m3d_vector_size])
 
 	temp << "+-" << setw(51) << "-+" << endl;
 	cout << temp.str();
+#else
+	(void)matrix;
 #endif
 }
 
