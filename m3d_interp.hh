@@ -12,88 +12,34 @@
  * Linear interpolation for single values.
  *
  * val(N) = val1 + N*val2/steps
+ *
+ * N goes from 0 to steps-1 for step rounds.
+ * N is increased by calling step().
  */
 
 class m3d_interp_step
 {
 public:
-	m3d_interp_step(int steps, float val1, float val2) : steps(steps), val(val1)
-	{
-		delta = (steps) ? (val2 - val1) / (float)steps : 0.0f;
-	}
+	m3d_interp_step(int steps, float val1, float val2);
 
-	float get_val(void)
+	void step(void);
+
+	inline float get_val(void)
 	{
 		return val;
 	}
 
-	int16_t get_int_val(void)
+	inline int get_int_val(void)
 	{
-		return (int16_t)(val);
+		return (int)val;
 	}
 
-	void step(void)
-	{
-		if (steps)
-		{
-			val += delta;
-			steps--;
-		}
-	}
-
-	float get_delta(void)
+	inline float get_delta(void)
 	{
 		return delta;
 	}
 
-	bool last_step(void)
-	{
-		return (steps) ? false : true;
-	}
-
-private:
-	int steps;
-	float val, delta;
-};
-
-/*
- * Linear interpolation for reciprocal of single values.
- *
- * val(N) = 1/val1 + N*(1/val2)/steps
- */
-
-class m3d_reciprocal_interp_step
-{
-public:
-	m3d_reciprocal_interp_step(int steps, float val1, float val2) : steps(steps)
-	{
-		if (steps)
-		{
-			val = 1.0f / val1;
-			delta = (1.0f / val2 - 1.0f / val1) / (float)steps;
-		}
-		else
-		{
-			val = 1.0f / val2;
-			delta = 0.0f;
-		}
-	}
-
-	float get_val(void)
-	{
-		return 1.0f / val;
-	}
-
-	void step(void)
-	{
-		if (steps)
-		{
-			val += delta;
-			steps--;
-		}
-	}
-
-	bool last_step(void)
+	inline bool finished(void)
 	{
 		return (steps) ? false : true;
 	}
@@ -114,50 +60,31 @@ private:
 class m3d_reciprocal_z_interp_step
 {
 public:
-	m3d_reciprocal_z_interp_step(int steps, float z1, float z2, float val1 = 1.0f, float val2 = 1.0f) : steps(steps), recipz(1.0f / z1), paramvalue(val1 / z1)
-	{
-		if (steps)
-		{
-			deltaparamvalue = (val2 / z2 - val1 / z1) / (float)steps;
-			deltarecipz = (1.0f / z2 - 1.0f / z1) / (float)steps;
-		}
-		else
-		{
-			deltaparamvalue = deltarecipz = 0.0f;
-		}
-	}
+	m3d_reciprocal_z_interp_step(int steps, float z1, float z2, float val1 = 1.0f, float val2 = 1.0f);
 
-	float get_z(void)
+	void step(void);
+
+	inline float get_z(void)
 	{
 		return 1.0f / recipz;
 	}
 
-	int16_t get_int_z(void)
+	inline int get_int_z(void)
 	{
-		return (int16_t)(1.0f / recipz);
+		return (int)(1.0f / recipz);
 	}
 
-	float get_recipz(void)
+	inline float get_recipz(void)
 	{
 		return recipz;
 	}
 
-	float get_paramvalue(void)
+	inline float get_paramvalue(void)
 	{
 		return paramvalue * get_z();
 	}
 
-	void step(void)
-	{
-		if (steps)
-		{
-			paramvalue += deltaparamvalue;
-			recipz += deltarecipz;
-			steps--;
-		}
-	}
-
-	bool last_step(void)
+	inline bool finished(void)
 	{
 		return (steps) ? false : true;
 	}
@@ -229,9 +156,9 @@ public:
 		return 1.0f / recipz;
 	}
 
-	int16_t get_int_z(void)
+	int get_int_z(void)
 	{
-		return (int16_t)(1.0f / recipz);
+		return (int)(1.0f / recipz);
 	}
 
 	float get_recipz(void)
