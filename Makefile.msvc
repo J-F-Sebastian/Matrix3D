@@ -35,7 +35,7 @@ CPPFLAGS = $(CPPFLAGS) /I$(MYLIBSDIR)\SDL2-32\include\SDL2
 CPPFLAGS = $(CPPFLAGS) /I$(MYLIBSDIR)\SDL2_ttf\include
 
 !ifdef DEBUG
-CPPFLAGS = $(CPPFLAGS) /Fmatrix3ddbg.pdb /Fematrix3ddb.exe
+CPPFLAGS = $(CPPFLAGS) /DDEBUG /Fmatrix3ddbg.pdb /Fematrix3ddb.exe
 !else
 CPPFLAGS = $(CPPFLAGS) /Fematrix3d.exe
 !endif
