@@ -51,7 +51,7 @@ LNFLAGS = $(LNFLAGS) /Fematrix3d.exe
 compileonly : $(MYOBJDIR) $(MYOBJS) *.hh
 
 all : $(MYOBJDIR) $(MYOBJS) *.hh
- $(CPP) $(LNFLAGS) $(MYOBJS) $(MYLIBSDIR)\SDL2\lib\SDL2.lib $(MYLIBSDIR)\SDL2_ttf\lib\x64\SDL2_ttf.lib
+ $(CPP) $(LNFLAGS) $(MYOBJS) $(MYLIBSDIR)\SDL2-32\lib\SDL2.lib $(MYLIBSDIR)\SDL2_ttf\lib\x86\SDL2_ttf.lib
 
 {}.cpp{$(MYOBJDIR)}.obj::
  $(CPP) $(CPPFLAGS) /Fo$(MYOBJDIR)\ $<
