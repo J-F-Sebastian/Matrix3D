@@ -217,8 +217,10 @@ void m3d_matrix::print(const float matrix[][m3d_vector_size])
         temp.precision(6);
 
         temp << "+-" << setw(51) << "-+" << endl;
-        for (unsigned i = 0; i < m3d_vector_size; i++)
-                temp << "|X " << setw(10) << matrix[X_C][i] << " Y " << setw(10) << matrix[Y_C][i] << " Z " << setw(10) << matrix[Z_C][i] << " T " << setw(10) << matrix[T_C][i] << "|" << endl;
+        temp << "|X " << setw(10) << matrix[X_C][X_C] << " X " << setw(10) << matrix[X_C][Y_C] << " X " << setw(10) << matrix[X_C][Z_C] << " X " << setw(10) << matrix[X_C][T_C] << "|" << endl;
+        temp << "|Y " << setw(10) << matrix[Y_C][X_C] << " Y " << setw(10) << matrix[Y_C][Y_C] << " Y " << setw(10) << matrix[Y_C][Z_C] << " Y " << setw(10) << matrix[Y_C][T_C] << "|" << endl;
+        temp << "|Z " << setw(10) << matrix[Z_C][X_C] << " Z " << setw(10) << matrix[X_C][Y_C] << " Z " << setw(10) << matrix[Z_C][Z_C] << " Z " << setw(10) << matrix[Z_C][T_C] << "|" << endl;
+        temp << "|T " << setw(10) << matrix[T_C][X_C] << " T " << setw(10) << matrix[T_C][Y_C] << " T " << setw(10) << matrix[T_C][Z_C] << " T " << setw(10) << matrix[T_C][T_C] << "|" << endl;
 
         temp << "+-" << setw(51) << "-+" << endl;
         cout << temp.str();
