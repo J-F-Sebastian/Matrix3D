@@ -402,75 +402,136 @@ m3d_matrix_camera::m3d_matrix_camera(const m3d_input_point &campos, const m3d_in
 }
 
 /**********************************************************************************************/
-m3d_frustum::m3d_frustum(const float angle, const int xres, const int yres)
+m3d_frustum::m3d_frustum(const float fowangle, const int xres, const int yres, const float near, const float far)
 {
         /*
-         * It is assumed that the far end is infinite.
-         * e is the distance from camera to the projection plane, considering
-         * a view angle of <angle> degrees.
-         * left, right, top and bottom intersections with the projection planes are computed
-         * to match the screen or window boundaries, provided by xres and yres.
-         * Aspect ration <a> is computed using the horizontal and vertical resolution - this should be configurable.
+         * Build a transform matrix for perspective projections.
+         * The reference is the glFrustum() function.
+         * The reference coordinates system is assumed to be right-handed with X axis left to right,
+         * Y axis bottom to top, Z axis front to back (towards the viewer, or exiting the screen).
          *
-         * Intersections
-         * Left     x = -n/e
-         * Right    x = n/e
-         * Top      y = a*n/e
-         * Bottom   y = -a*n/e
+         *         ^ Y
+         *         |
+         *         |
+         *         |
+         *         |
+         *         O---------->
+         *        /           X
+         *       /
+         *      /
+         *     Z
          *
-         * The transformation from frustum to perspective-corrected projection maps the frustum to a cube
-         * with edges on X[-xres, +xres] Y[-yres, +yres] Z[e, 5*e].
-         * Depth of view f is considered infinite but it can be set to a finite value too.
+         * The frustum is a pyramid delimited by near and far view planes.
+         * The near plane is the projection plane, the plane where 3D points becomes 2D visible points
+         * by projection.
+         * The far plane is the visibility limit, the maximum depth at which a point is visible.
+         * The frustum is then the camera coordinate space, the space of visible points.
+         * The distance from the viewpoint to the near field is computed as
+         *
+         *  e = 1/tan(fowangle/2)
+         *
+         * where the field of view angle (fowangle) is the width of the view angle form left to right;
+         * bigger angles give closer near planes, hence wide views implies zooming out (objects get closer
+         * to the viewpoint as the distance of the near plane becomes smaller).
+         * The near plane intersections have coordinates of x[-1, 1] and y[-a , a], where a is the aspect ratio of the screen.
+         *
+         * In order to have the near plane at a specific distance n from the point of view we need to scale by a factor of n/e
+         * x and y intersections; so we get x[-n/e, n/e] and y [-a*n/e, a*n/e].
+         *
+         * The projection matrix transforms the contents of the frustum (camera-space) into homogeneus coordinates of
+         * a cube which extends in the range [-1, +1] for x, y and z values.
+         * The cube (clipping) is left-handed, i.e. the Z coordinates are negative from screen to viewpoint.
+         * The clipped/projected point
          */
-        float e = 1.0f / tan(angle * INV_RAD / 2.0f);
-        float n = e;
-        float r = 1;
-        float l = -1;
-        float t = (float)yres / (float)xres;
-        float b = -(float)yres / (float)xres;
-        float f = -1000.0f;
+        float e = 1.0f / tan(fowangle * INV_RAD / 2.0f);
+        float a = (float)yres / (float)xres;
 
-#if 1
-        mymatrix[X_C][X_C] = 2.0f * n / (r - l);
+        mymatrix[X_C][X_C] = (2.0f * near) / (2.0f * (near / e));
         mymatrix[X_C][Y_C] = 0.0f;
-        mymatrix[X_C][Z_C] = (r + l) / (r - l);
+        mymatrix[X_C][Z_C] = 0.0f;
         mymatrix[X_C][T_C] = 0.0f;
 
         mymatrix[Y_C][X_C] = 0.0f;
-        mymatrix[Y_C][Y_C] = 2.0f * n / (t - b);
-        mymatrix[Y_C][Z_C] = (t + b) / (t - b);
+        mymatrix[Y_C][Y_C] = (2.0f * near) / (2.0f * a * (near / e));
+        mymatrix[Y_C][Z_C] = 0.0f;
         mymatrix[Y_C][T_C] = 0.0f;
 
         mymatrix[Z_C][X_C] = 0.0f;
         mymatrix[Z_C][Y_C] = 0.0f;
-        mymatrix[Z_C][Z_C] = -(f + n) / (f - n);
-        mymatrix[Z_C][T_C] = -2.0f * n * f / (f - n);
+        mymatrix[Z_C][Z_C] = -(far + near) / (far - near);
+        mymatrix[Z_C][T_C] = -2.0f * near * far / (far - near);
 
         mymatrix[T_C][X_C] = 0.0f;
         mymatrix[T_C][Y_C] = 0.0f;
         mymatrix[T_C][Z_C] = -1.0f;
         mymatrix[T_C][T_C] = 0.0f;
-#else
-        mymatrix[X_C][X_C] = 2.0f * n / (r - l);
+
+        transpose();
+}
+
+m3d_frustum::m3d_frustum(const float fowangle, const int xres, const int yres, const float near)
+{
+        /*
+         * Build a transform matrix for perspective projections.
+         * The reference is the glFrustum() function.
+         * The reference coordinates system is assumed to be right-handed with X axis left to right,
+         * Y axis bottom to top, Z axis front to back (towards the viewer, or exiting the screen).
+         *
+         *         ^ Y
+         *         |
+         *         |
+         *         |
+         *         |
+         *         O---------->
+         *        /           X
+         *       /
+         *      /
+         *     Z
+         *
+         * The frustum is a pyramid delimited by near and far view planes.
+         * The near plane is the projection plane, the plane where 3D points becomes 2D visible points
+         * by projection.
+         * The far plane is the visibility limit, the maximum depth at which a point is visible.
+         * The frustum is then the camera coordinate space, the space of visible points.
+         * The distance from the viewpoint to the near field is computed as
+         *
+         *  e = 1/tan(fowangle/2)
+         *
+         * where the field of view angle (fowangle) is the width of the view angle form left to right;
+         * bigger angles give closer near planes, hence wide views implies zooming out (objects get closer
+         * to the viewpoint as the distance of the near plane becomes smaller).
+         * The near plane intersections have coordinates of x[-1, 1] and y[-a , a], where a is the aspect ratio of the screen.
+         *
+         * In order to have the near plane at a specific distance n from the point of view we need to scale by a factor of n/e
+         * x and y intersections; so we get x[-n/e, n/e] and y [-a*n/e, a*n/e].
+         *
+         * The projection matrix transforms the contents of the frustum (camera-space) into homogeneus coordinates of
+         * a cube which extends in the range [-1, +1] for x, y and z values.
+         * The cube (clipping) is left-handed, i.e. the Z coordinates are negative from screen to viewpoint.
+         * The clipped/projected point
+         */
+        float e = 1.0f / tan(fowangle * INV_RAD / 2.0f);
+        float a = (float)yres / (float)xres;
+
+        mymatrix[X_C][X_C] = (2.0f * near) / (2.0f * (near / e));
         mymatrix[X_C][Y_C] = 0.0f;
-        mymatrix[X_C][Z_C] = (r + l) / (r - l);
+        mymatrix[X_C][Z_C] = 0.0f;
         mymatrix[X_C][T_C] = 0.0f;
 
         mymatrix[Y_C][X_C] = 0.0f;
-        mymatrix[Y_C][Y_C] = 2.0f * n / (t - b);
-        mymatrix[Y_C][Z_C] = (t + b) / (t - b);
+        mymatrix[Y_C][Y_C] = (2.0f * near) / (2.0f * a * (near / e));
+        mymatrix[Y_C][Z_C] = 0.0f;
         mymatrix[Y_C][T_C] = 0.0f;
 
         mymatrix[Z_C][X_C] = 0.0f;
         mymatrix[Z_C][Y_C] = 0.0f;
         mymatrix[Z_C][Z_C] = -1.0f;
-        mymatrix[Z_C][T_C] = -2.0f * n;
+        mymatrix[Z_C][T_C] = -2.0f * near;
 
         mymatrix[T_C][X_C] = 0.0f;
         mymatrix[T_C][Y_C] = 0.0f;
         mymatrix[T_C][Z_C] = -1.0f;
         mymatrix[T_C][T_C] = 0.0f;
-#endif
+
         transpose();
-        // print();
 }
