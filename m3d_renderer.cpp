@@ -780,9 +780,9 @@ void m3d_renderer_shaded::triangle_fill_shaded(struct m3d_renderer_data vtx[],
     illuminate(vtx[0], world);
     illuminate(vtx[1], world);
     illuminate(vtx[2], world);
-    world.camera.transform_to_frustum(vtx[0].vertex);
-    world.camera.transform_to_frustum(vtx[1].vertex);
-    world.camera.transform_to_frustum(vtx[2].vertex);
+    world.camera.projection(vtx[0].vertex);
+    world.camera.projection(vtx[1].vertex);
+    world.camera.projection(vtx[2].vertex);
     float zp0 = vtx[0].vertex.myvector[Z_C];
     float zp1 = vtx[1].vertex.myvector[Z_C];
     float zp2 = vtx[2].vertex.myvector[Z_C];
@@ -918,9 +918,9 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(struct m3d_renderer_data 
     illuminate(vtx[0], world);
     illuminate(vtx[1], world);
     illuminate(vtx[2], world);
-    world.camera.transform_to_frustum(vtx[0].vertex);
-    world.camera.transform_to_frustum(vtx[1].vertex);
-    world.camera.transform_to_frustum(vtx[2].vertex);
+    world.camera.projection(vtx[0].vertex);
+    world.camera.projection(vtx[1].vertex);
+    world.camera.projection(vtx[2].vertex);
     m3d_interp_step *left, *right, *leftz, *rightz;
     m3d_interp_step lightint0(runlen[0], vtx[0].lightint, vtx[2].lightint);
     m3d_interp_step lightint1(runlen[1], vtx[0].lightint, vtx[1].lightint);
