@@ -354,10 +354,10 @@ void m3d_renderer_wireframe::render(m3d_world &world)
  */
 void m3d_renderer_flat::render(m3d_world &world)
 {
-    unsigned runlen[3];
     unsigned i, j;
     m3d_point L;
     struct m3d_renderer_data vtx[3];
+    int16_t runlen[3];
 
     // Compute visible objects
     compute_visible_list_and_sort(world);
@@ -386,21 +386,6 @@ void m3d_renderer_flat::render(m3d_world &world)
                 // color is blended, brighten is a multiplication
                 vtx[0].color = itro->color;
                 vtx[0].color.brighten(m3d_average_light(vtx));
-                /*
-                 * alloc a vector of memory pointers for any y.
-                 * In other words store all x computed along the lines composing
-                 * the triangle.
-                 * Obviously the number of pointers is twice the distance from smallest
-                 * to biggest y values.
-                 * run0 = run1 + run2 - 1
-                 *
-                 * run1 and run2 have 1 overlapping point
-                 *
-                 */
-
-                runlen[0] = vtx[2].toscreen.y - vtx[0].toscreen.y + 1;
-                runlen[1] = vtx[1].toscreen.y - vtx[0].toscreen.y + 1;
-                runlen[2] = vtx[2].toscreen.y - vtx[1].toscreen.y + 1;
 
                 /*
                  * Store x in this order: A to C, A to B, B to C
@@ -413,24 +398,12 @@ void m3d_renderer_flat::render(m3d_world &world)
                  *              C
                  */
 
-                /*
-                 * run0 cannot be 1, as this is avoided by the initial check on x and y
-                 */
-                store_scanlines((int16_t)vtx[0].toscreen.x, (int16_t)vtx[0].toscreen.y,
-                                (int16_t)vtx[2].toscreen.x, (int16_t)vtx[2].toscreen.y);
-
-                /*
-                 * run1 and run2 can be 1, but not both of them, as run1 cannot be 1
-                 * (nor 0!) and run0 = run1 + run2 - 1.
-                 * When a run equals 1, the line is horizontal.
-                 */
-                store_scanlines((int16_t)vtx[0].toscreen.x, (int16_t)vtx[0].toscreen.y,
-                                (int16_t)vtx[1].toscreen.x, (int16_t)vtx[1].toscreen.y,
-                                runlen[0]);
-
-                store_scanlines((int16_t)vtx[1].toscreen.x, (int16_t)vtx[1].toscreen.y,
-                                (int16_t)vtx[2].toscreen.x, (int16_t)vtx[2].toscreen.y,
-                                runlen[0] + runlen[1] - 1);
+                // runlen[0] = runlen[1] + runlen[2]
+                // due to the overlapping value when computing runlen 1 and 2 the
+                // last runlen is 1 less the actual value, so it can be 0.
+                runlen[0] = store_scanlines(vtx[0].toscreen.x, vtx[0].toscreen.y, vtx[2].toscreen.x, vtx[2].toscreen.y);
+                runlen[1] = store_scanlines(vtx[0].toscreen.x, vtx[0].toscreen.y, vtx[1].toscreen.x, vtx[1].toscreen.y, runlen[0]);
+                runlen[2] = store_scanlines(vtx[1].toscreen.x, vtx[1].toscreen.y, vtx[2].toscreen.x, vtx[2].toscreen.y, runlen[0] + runlen[1] - 1) - 1;
 
                 triangle_fill_flat(vtx, runlen);
             }
@@ -441,50 +414,53 @@ void m3d_renderer_flat::render(m3d_world &world)
     display->show_buffer();
 }
 
-void m3d_renderer_flat::triangle_fill_flat(struct m3d_renderer_data vtx[],
-                                           unsigned runlen[])
+void m3d_renderer_flat::triangle_fill_flat(struct m3d_renderer_data vtx[], int16_t *runlen)
 {
-    unsigned a = 1;
-    int16_t *ptscursora, *ptscursorb;
-    uint32_t *output, *outputend;
-    int16_t *outz;
-    float p0 = vtx[0].vertex.myvector[Z_C];
-    float p1 = vtx[1].vertex.myvector[Z_C];
-    float p2 = vtx[2].vertex.myvector[Z_C];
-    m3d_interp_step run0(runlen[0], p0, p2);
-    m3d_interp_step run1(runlen[1], p0, p1);
-    m3d_interp_step run2(runlen[2], p1, p2);
-    m3d_interp_step *left, *right;
+    uint32_t *output;
+    float *outz;
     int16_t y = (int16_t)vtx[0].toscreen.y;
+    int steps;
+    int16_t *leftx, *rightx;
+    m3d_interpolation_float leftz(runlen[1]), rightz(runlen[1]);
+    m3d_interpolation_float leftz2(runlen[2]), rightz2(runlen[2]);
 
     /*
-     * check x values to understand who's the left half and who's the right
+     * check x values to understand who's the left half and who's the right.
+     * First run length is ALWAYS the longest run.
      */
-    /* Draws a horizontal line from first half of points to second half */
-    if (scanline[runlen[0] / 2] <= scanline[runlen[0] + runlen[0] / 2])
+    if (scanline[runlen[0] / 2] <= scanline[runlen[0] + runlen[1] - 1])
     {
-        ptscursora = scanline;
-        ptscursorb = scanline + runlen[0];
-        left = &run0;
-        right = &run1;
+        leftx = scanline;
+        rightx = scanline + runlen[0];
+        leftz.init(vtx[0].vertex.myvector[Z_C], vtx[0].vertex.myvector[Z_C] + (vtx[2].vertex.myvector[Z_C] - vtx[0].vertex.myvector[Z_C]) / 2);
+        rightz.init(vtx[0].vertex.myvector[Z_C], vtx[1].vertex.myvector[Z_C]);
+        leftz2.init(vtx[0].vertex.myvector[Z_C] + (vtx[2].vertex.myvector[Z_C] - vtx[0].vertex.myvector[Z_C]) / 2, vtx[2].vertex.myvector[Z_C]);
+        rightz2.init(vtx[1].vertex.myvector[Z_C], vtx[2].vertex.myvector[Z_C]);
     }
     else
     {
-        ptscursora = scanline + runlen[0];
-        ptscursorb = scanline;
-        left = &run1;
-        right = &run0;
+        leftx = scanline + runlen[0];
+        rightx = scanline;
+        leftz.init(vtx[0].vertex.myvector[Z_C], vtx[1].vertex.myvector[Z_C]);
+        rightz.init(vtx[0].vertex.myvector[Z_C], vtx[0].vertex.myvector[Z_C] + (vtx[2].vertex.myvector[Z_C] - vtx[0].vertex.myvector[Z_C]) / 2);
+        leftz2.init(vtx[1].vertex.myvector[Z_C], vtx[2].vertex.myvector[Z_C]);
+        rightz2.init(vtx[0].vertex.myvector[Z_C] + (vtx[2].vertex.myvector[Z_C] - vtx[0].vertex.myvector[Z_C]) / 2, vtx[2].vertex.myvector[Z_C]);
     }
 
-    while (a++ < runlen[1])
+    while (runlen[1]--)
     {
-        m3d_interp_step sl((*ptscursorb - *ptscursora + 1), left->get_val(), right->get_val());
-        output = display->get_video_buffer(*ptscursora, y);
-        outputend = display->get_video_buffer(*ptscursorb++, y);
-        outz = zbuffer.get_zbuffer(*ptscursora++, y);
-        while (output <= outputend)
+        steps = *rightx - *leftx + 1;
+        m3d_interpolation_float sl(steps, leftz.value(), rightz.value());
+        output = display->get_video_buffer(*leftx, y);
+        outz = zbuffer.get_zbuffer(*leftx, y);
+        while (sl.finished() == false)
         {
-            if (zbuffer.test(outz, sl.get_int_val()))
+            if (sl.value() > 1.0f)
+            {
+                std::cout << " MI ARRENDO " << sl.value() << std::endl;
+                exit(0);
+            }
+            if (zbuffer.test_update(outz, sl.value()))
             {
                 *output = vtx[0].color.getColor();
             }
@@ -492,40 +468,41 @@ void m3d_renderer_flat::triangle_fill_flat(struct m3d_renderer_data vtx[],
             ++outz;
             sl.step();
         }
-        left->step();
-        right->step();
+        leftx++;
+        rightx++;
+        leftz.step();
+        rightz.step();
         y++;
     }
 
-    if (left == &run1)
+    if (runlen[2])
     {
-        left = &run2;
-    }
-    else
-    {
-        right = &run2;
-    }
+        // Skip first run, it overlaps
+        leftz2.step();
+        rightz2.step();
 
-    a = 1;
-    while (a++ < runlen[2])
-    {
-        m3d_interp_step sl((*ptscursorb - *ptscursora + 1), left->get_val(), right->get_val());
-        output = display->get_video_buffer(*ptscursora, y);
-        outputend = display->get_video_buffer(*ptscursorb++, y);
-        outz = zbuffer.get_zbuffer(*ptscursora++, y);
-        while (output <= outputend)
+        while (runlen[2]--)
         {
-            if (zbuffer.test(outz, sl.get_int_val()))
+            steps = *rightx - *leftx + 1;
+            m3d_interpolation_float sl(steps, leftz2.value(), rightz2.value());
+            output = display->get_video_buffer(*leftx, y);
+            outz = zbuffer.get_zbuffer(*leftx, y);
+            while (sl.finished() == false)
             {
-                *output = vtx[0].color.getColor();
+                if (zbuffer.test_update(outz, sl.value()))
+                {
+                    *output = vtx[0].color.getColor();
+                }
+                ++output;
+                ++outz;
+                sl.step();
             }
-            ++output;
-            ++outz;
-            sl.step();
+            leftx++;
+            rightx++;
+            leftz2.step();
+            rightz2.step();
+            y++;
         }
-        left->step();
-        right->step();
-        y++;
     }
 }
 
