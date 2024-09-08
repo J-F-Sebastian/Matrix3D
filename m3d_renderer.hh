@@ -33,6 +33,9 @@ protected:
 	m3d_display *display;
 	// The scanline buffer
 	int16_t *scanline;
+	float *fscanline;
+	// The scanline depth buffer
+	float *zscanline;
 	// Z buffer
 	m3d_zbuffer zbuffer;
 	// The list of visible objects
@@ -55,6 +58,23 @@ protected:
 	 */
 	int16_t store_scanlines(int16_t x0, int16_t y0, int16_t x1, int16_t y1, unsigned start = 0);
 
+	/*
+	 * Store scanlines into the float fscanline buffer, starting at position start inside the buffer.
+	 * The fscanline buffer carries the X coordinates of every linecomposing the polygon
+	 * to be filled with horizontal lines (scan lines!).
+	 * The Y coordinates are implicitely starting at the lowest y0, i.e. the caller MUST know
+	 * the coordinates of the points composing the polygon and how they are sorted.
+	 */
+	void store_fscanlines(unsigned runlen, float val1, float val2, unsigned start = 0);
+
+	/*
+	 * Store scanlines into the float zscanline buffer, starting at position start inside the buffer.
+	 * The zscanline buffer carries the Z homogeneous coordinates of every linecomposing the polygon
+	 * to be filled with horizontal lines (scan lines!).
+	 * The Y coordinates are implicitely starting at the lowest y0, i.e. the caller MUST know
+	 * the coordinates of the points composing the polygon and how they are sorted.
+	 */
+	void store_zscanlines(unsigned runlen, float val1, float val2, unsigned start = 0);
 	/*
 	 * Compute the light intensity for vertex vtx using the world description.
 	 * All coordinates are in the WORLD reference system, i. e. the origin is (0,0,0).

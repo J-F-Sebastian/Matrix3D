@@ -21,11 +21,15 @@ static inline float m3d_average_light(struct m3d_renderer::m3d_renderer_data n[]
 m3d_renderer::~m3d_renderer()
 {
     delete scanline;
+    delete fscanline;
+    delete zscanline;
 }
 
 m3d_renderer::m3d_renderer(m3d_display *disp) : display(disp), zbuffer((int16_t)disp->get_xmax(), (int16_t)disp->get_ymax())
 {
     scanline = new int16_t[display->get_ymax() * 2];
+    fscanline = new float[display->get_ymax() * 2];
+    zscanline = new float[display->get_ymax() * 2];
 }
 
 /*
@@ -260,6 +264,18 @@ int16_t m3d_renderer::store_scanlines(int16_t x0,
     return (deltay + 1);
 }
 
+void m3d_renderer::store_fscanlines(unsigned runlen, float val1, float val2, unsigned start)
+{
+    m3d_interpolation_float run(runlen, val1, val2);
+    run.valuearray(fscanline + start);
+}
+
+void m3d_renderer::store_zscanlines(unsigned runlen, float val1, float val2, unsigned start)
+{
+    m3d_interpolation_float run(runlen, val1, val2);
+    run.valuearray(zscanline + start);
+}
+
 void m3d_renderer::illuminate(struct m3d_renderer_data &vtx, m3d_world &world)
 {
     m3d_point L;
@@ -475,34 +491,32 @@ void m3d_renderer_flat::triangle_fill_flat(struct m3d_renderer_data vtx[], int16
         y++;
     }
 
-    if (runlen[2])
+    // Skip first run, it overlaps
+    leftz2.step();
+    rightz2.step();
+    runlen[2]--;
+
+    while (runlen[2]--)
     {
-        // Skip first run, it overlaps
+        steps = *rightx - *leftx + 1;
+        m3d_interpolation_float sl(steps, leftz2.value(), rightz2.value());
+        output = display->get_video_buffer(*leftx, y);
+        outz = zbuffer.get_zbuffer(*leftx, y);
+        while (sl.finished() == false)
+        {
+            if (zbuffer.test_update(outz, sl.value()))
+            {
+                *output = vtx[0].color.getColor();
+            }
+            ++output;
+            ++outz;
+            sl.step();
+        }
+        leftx++;
+        rightx++;
         leftz2.step();
         rightz2.step();
-
-        while (runlen[2]--)
-        {
-            steps = *rightx - *leftx + 1;
-            m3d_interpolation_float sl(steps, leftz2.value(), rightz2.value());
-            output = display->get_video_buffer(*leftx, y);
-            outz = zbuffer.get_zbuffer(*leftx, y);
-            while (sl.finished() == false)
-            {
-                if (zbuffer.test_update(outz, sl.value()))
-                {
-                    *output = vtx[0].color.getColor();
-                }
-                ++output;
-                ++outz;
-                sl.step();
-            }
-            leftx++;
-            rightx++;
-            leftz2.step();
-            rightz2.step();
-            y++;
-        }
+        y++;
     }
 }
 
@@ -552,10 +566,10 @@ void m3d_renderer_flatf::render(m3d_world &world)
     display->show_buffer();
 }
 
+#if 0
 void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
 {
-    unsigned a = 1;
-    uint32_t *output, *outputend;
+    uint32_t *output;
     float *outz;
     float p0 = vtx[0].vertex.myvector[Z_C];
     float p1 = vtx[1].vertex.myvector[Z_C];
@@ -566,7 +580,7 @@ void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
     unsigned runlen0 = vtx[2].toscreen.y - vtx[0].toscreen.y + 1;
     unsigned runlen1 = vtx[1].toscreen.y - vtx[0].toscreen.y + 1;
     unsigned runlen2 = vtx[2].toscreen.y - vtx[1].toscreen.y + 1;
-    unsigned fillrunlen;
+    int fillrunlen;
     m3d_interpolation_float zrun0(runlen0, p0, p2);
     m3d_interpolation_float zrun1(runlen1, p0, p1);
     m3d_interpolation_float zrun2(runlen2, p1, p2);
@@ -595,14 +609,13 @@ void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
         xrright = &xrun0;
     }
 
-    while (a++ < runlen1)
+    while (runlen1--)
     {
-        fillrunlen = (unsigned)lroundf(xrright->value() - xrleft->value() + 1.0f);
+        fillrunlen = lroundf(xrright->value() - xrleft->value()) + 1;
         m3d_interpolation_float sl(fillrunlen, zrleft->value(), zrright->value());
         output = display->get_video_buffer((int16_t)lroundf(xrleft->value()), y);
-        outputend = output + fillrunlen;
         outz = zbuffer.get_zbuffer((int16_t)lroundf(xrleft->value()), y);
-        while (output < outputend)
+        while (sl.finished() == false)
         {
             if (zbuffer.test_update(outz, sl.value()))
             {
@@ -630,15 +643,13 @@ void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
         zrright = &zrun2;
     }
 
-    a = 1;
-    while (a++ < runlen2)
+    while (runlen2--)
     {
-        fillrunlen = (unsigned)lroundf(xrright->value() - xrleft->value() + 1.0f);
+        fillrunlen = lroundf(xrright->value() - xrleft->value()) + 1;
         m3d_interpolation_float sl(fillrunlen, zrleft->value(), zrright->value());
         output = display->get_video_buffer((int16_t)lroundf(xrleft->value()), y);
-        outputend = output + fillrunlen;
         outz = zbuffer.get_zbuffer((int16_t)lroundf(xrleft->value()), y);
-        while (output < outputend)
+        while (sl.finished() == false)
         {
             if (zbuffer.test_update(outz, sl.value()))
             {
@@ -652,6 +663,80 @@ void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
         xrright->step();
         zrleft->step();
         zrright->step();
+        y++;
+    }
+}
+#endif
+
+// If this thing prove to be faster, refactor and remove integer scanlines
+void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
+{
+    uint32_t *output;
+    float *outz;
+    float p0 = vtx[0].vertex.myvector[Z_C];
+    float p1 = vtx[1].vertex.myvector[Z_C];
+    float p2 = vtx[2].vertex.myvector[Z_C];
+    float p3 = (float)vtx[0].toscreen.x;
+    float p4 = (float)vtx[1].toscreen.x;
+    float p5 = (float)vtx[2].toscreen.x;
+    unsigned runlen0 = vtx[2].toscreen.y - vtx[0].toscreen.y + 1;
+    unsigned runlen1 = vtx[1].toscreen.y - vtx[0].toscreen.y + 1;
+    unsigned runlen2 = vtx[2].toscreen.y - vtx[1].toscreen.y + 1;
+    int fillrunlen;
+    int16_t y = (int16_t)vtx[0].toscreen.y;
+    float *lscanline, *rscanline;
+    float *lzscanline, *rzscanline;
+    float lgradient = (p5 - p3) / (float)runlen0;
+    float rgradient = (p4 - p3) / (float)runlen1;
+
+    /*
+     * check x values to understand who's the left half and who's the right
+     */
+    /* Draws a horizontal line from first half of points to second half */
+    if (lgradient <= rgradient)
+    {
+        store_fscanlines(runlen0, p3, p5);
+        store_fscanlines(runlen1, p3, p4, runlen0);
+        store_fscanlines(runlen2, p4, p5, runlen0 + runlen1 - 1);
+        store_zscanlines(runlen0, p0, p2);
+        store_zscanlines(runlen1, p0, p1, runlen0);
+        store_zscanlines(runlen2, p1, p2, runlen0 + runlen1 - 1);
+    }
+    else
+    {
+        store_fscanlines(runlen1, p3, p4);
+        store_fscanlines(runlen2, p4, p5, runlen1 - 1);
+        store_fscanlines(runlen0, p3, p5, runlen1 + runlen2 - 1);
+        store_zscanlines(runlen1, p0, p1);
+        store_zscanlines(runlen2, p1, p2, runlen1 - 1);
+        store_zscanlines(runlen0, p0, p2, runlen1 + runlen2 - 1);
+    }
+
+    lscanline = fscanline;
+    rscanline = fscanline + runlen0;
+    lzscanline = zscanline;
+    rzscanline = zscanline + runlen0;
+
+    while (runlen0--)
+    {
+        fillrunlen = lroundf(*rscanline - *lscanline) + 1;
+        m3d_interpolation_float sl(fillrunlen, *lzscanline, *rzscanline);
+        output = display->get_video_buffer((int16_t)lroundf(*lscanline), y);
+        outz = zbuffer.get_zbuffer((int16_t)lroundf(*lscanline), y);
+        while (sl.finished() == false)
+        {
+            if (zbuffer.test_update(outz, sl.value()))
+            {
+                *output = vtx[0].color.getColor();
+            }
+            ++output;
+            ++outz;
+            sl.step();
+        }
+        lscanline++;
+        rscanline++;
+        lzscanline++;
+        rzscanline++;
         y++;
     }
 }
