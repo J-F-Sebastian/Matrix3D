@@ -1,7 +1,8 @@
 #ifndef M3D_INTERP_HH_INCLUDED
 #define M3D_INTERP_HH_INCLUDED
 
-#include "m3d_math.hh"
+#include <cmath>
+#include "m3d_math_vector.hh"
 
 /*
  * Interpolation classes
@@ -11,91 +12,116 @@
 /*
  * Linear interpolation for single values.
  *
- * val(N) = val1 + N*val2/steps
+ * val(n) = val1*(1 - n) + val2*n
  *
- * N goes from 0 to steps-1 for step rounds.
+ * n goes from 0 to 1, real values.
+ *
+ * Discrete formula follows
+ *
+ * val(N) = val1*(steps - N)/steps + val2*N/steps
+ * val(N) = val1 - val1*N/steps + val2*N/steps
+ * val(N) = val1 + (val2 - val1)*N/steps
+ *
+ * N goes from 0 to steps, integer values.
  * N is increased by calling step().
  */
 
-class m3d_interp_step
+class m3d_interpolation
 {
 public:
-	m3d_interp_step(int steps, float val1, float val2);
-
-	void step(void);
-
-	inline float get_val(void)
+	m3d_interpolation(const int steps) : steps(steps)
 	{
-		return val;
+		if (this->steps < 1)
+			this->steps = 1;
 	}
 
-	inline int get_int_val(void)
-	{
-		return (int)val;
-	}
+	virtual void step(void) = 0;
 
-	inline float get_delta(void)
-	{
-		return delta;
-	}
-
-	inline bool finished(void)
+	inline bool finished(void) const
 	{
 		return (steps) ? false : true;
 	}
 
-private:
+	inline int stepsvalue(void) const { return steps; }
+
+protected:
 	int steps;
-	float val, delta;
 };
 
 /*
- * Reciprocal linear interpolation of single values.
- *
- * val(N)/z(N) = val1/z1 + N*val2/z2/steps
- *
- * val(N) = z(N) * (val1/z1 + N*val2/z2/steps)
+ * Linear interpolation of float values.
  */
-
-class m3d_reciprocal_z_interp_step
+class m3d_interpolation_float : public m3d_interpolation
 {
 public:
-	m3d_reciprocal_z_interp_step(int steps, float z1, float z2, float val1 = 1.0f, float val2 = 1.0f);
+	m3d_interpolation_float() : m3d_interpolation(0), start(0.0f), val(0.0f), delta(0.0f) {}
+	explicit m3d_interpolation_float(const int steps);
+	explicit m3d_interpolation_float(const int steps, const float val1, const float val2);
 
-	void step(void);
+	void init(const int step, const float val1, const float val2);
 
-	inline float get_z(void)
-	{
-		return 1.0f / recipz;
-	}
+	virtual void step(void);
 
-	inline int get_int_z(void)
-	{
-		return (int)(1.0f / recipz);
-	}
+	void valuearray(float *out);
 
-	inline float get_recipz(void)
-	{
-		return recipz;
-	}
+	inline float value(void) { return val; }
 
-	inline float get_paramvalue(void)
-	{
-		return paramvalue * get_z();
-	}
+	inline float deltavalue(void) { return delta; }
 
-	inline bool finished(void)
-	{
-		return (steps) ? false : true;
-	}
+	inline float compute(int stepn) { return start + (float)stepn * delta; }
 
 private:
-	int steps;
-	/* reciprocal of Z */
-	float recipz;
-	float paramvalue;
-	float deltaparamvalue;
-	float deltarecipz;
+	float start, val, delta;
+};
+
+/*
+ * Linear interpolation of short integer values.
+ */
+class m3d_interpolation_short : public m3d_interpolation
+{
+public:
+	m3d_interpolation_short() : m3d_interpolation(0), start(0), val(0), delta(0) {}
+	explicit m3d_interpolation_short(const int steps);
+	explicit m3d_interpolation_short(const int steps, const short val1, const short val2);
+
+	void init(const int step, const short val1, const short val2);
+
+	virtual void step(void);
+
+	void valuearray(short *out);
+
+	inline short value(void) { return (short)((val + 0x8000) >> 16); }
+
+	inline int deltavalue(void) { return delta; }
+
+	inline short compute(int stepn) { return (short)((start + stepn * delta + 0x8000) >> 16); }
+
+private:
+	int start, val, delta;
+};
+
+/*
+ * Linear interpolation of single values with perspective correction.
+ *
+ * 1/z3 = 1/z1 + (1/z2 - 1/z1)*n
+ *
+ * value = z3*(val1/z1 + (val2/z2 - val1/z1)*n)
+ *
+ * n goes from 0 to 1, real values.
+ * Discrete formula is way too complicated to be written in ASCII...
+ */
+
+class m3d_interpolation_float_perspective : public m3d_interpolation
+{
+public:
+	m3d_interpolation_float_perspective(int steps, float z1, float z2, float val1, float val2);
+
+	virtual void step(void);
+
+	inline float value(void) { return val; }
+
+private:
+	float val1, z1inv, deltav, deltazinv, val;
 };
 
 /*
