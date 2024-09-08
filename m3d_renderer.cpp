@@ -25,7 +25,7 @@ m3d_renderer::~m3d_renderer()
 
 m3d_renderer::m3d_renderer(m3d_display *disp) : display(disp), zbuffer((int16_t)disp->get_xmax(), (int16_t)disp->get_ymax())
 {
-    scanline = new int16_t[display->get_xmax() * display->get_ymax()];
+    scanline = new int16_t[display->get_ymax() * 2];
 }
 
 /*
@@ -67,11 +67,11 @@ void m3d_renderer::sort_triangle(struct m3d_renderer_data trianglep[])
  * Some keynotes: y0 is always lesser than or equal to y1.
  * Thanks to Michael Abrash for his invaluable books....
  */
-void m3d_renderer::store_scanlines(int16_t x0,
-                                   int16_t y0,
-                                   int16_t x1,
-                                   int16_t y1,
-                                   unsigned start)
+int16_t m3d_renderer::store_scanlines(int16_t x0,
+                                      int16_t y0,
+                                      int16_t x1,
+                                      int16_t y1,
+                                      unsigned start)
 {
     int16_t advancex, deltax, deltay;
     int16_t wholestep, adjup, adjdown;
@@ -98,7 +98,7 @@ void m3d_renderer::store_scanlines(int16_t x0,
     {
         /* horizontal line, one value only */
         *stor++ = val;
-        return;
+        return 1;
     }
 
     if (!deltax)
@@ -108,7 +108,7 @@ void m3d_renderer::store_scanlines(int16_t x0,
         {
             *stor++ = val;
         }
-        return;
+        return (deltay + 1);
     }
 
     if (deltax == deltay)
@@ -120,7 +120,7 @@ void m3d_renderer::store_scanlines(int16_t x0,
             val += advancex;
             *stor++ = val;
         }
-        return;
+        return (deltay + 1);
     }
 
     if (deltax < deltay)
@@ -257,6 +257,7 @@ void m3d_renderer::store_scanlines(int16_t x0,
             *stor = val;
         }
     }
+    return (deltay + 1);
 }
 
 void m3d_renderer::illuminate(struct m3d_renderer_data &vtx, m3d_world &world)

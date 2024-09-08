@@ -53,7 +53,7 @@ protected:
 	 * The Y coordinates are implicitely starting at the lowest y0, i.e. the caller MUST know
 	 * the coordinates of the points composing the polygon and how they are sorted.
 	 */
-	void store_scanlines(int16_t x0, int16_t y0, int16_t x1, int16_t y1, unsigned start = 0);
+	int16_t store_scanlines(int16_t x0, int16_t y0, int16_t x1, int16_t y1, unsigned start = 0);
 
 	/*
 	 * Compute the light intensity for vertex vtx using the world description.
@@ -92,8 +92,7 @@ public:
 	virtual void render(m3d_world &world);
 
 private:
-	void triangle_fill_flat(struct m3d_renderer_data vtx[],
-				unsigned runlen[]);
+	void triangle_fill_flat(struct m3d_renderer_data vtx[], int16_t *runlen);
 };
 
 class m3d_renderer_flatf : public m3d_renderer
