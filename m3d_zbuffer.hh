@@ -9,9 +9,8 @@ public:
 	m3d_zbuffer() : zbuffer(nullptr), size(0), xres(0), yres(0) {}
 	m3d_zbuffer(int16_t xres, int16_t yres) : size(xres * yres), xres(xres), yres(yres)
 	{
-		//    size = xres * yres;
-		//        zbuffer = new float[size];
-		zbuffer = new int16_t[size];
+		zbuffer = new float[size];
+		reset();
 	}
 
 	~m3d_zbuffer()
@@ -22,14 +21,14 @@ public:
 
 	void reset(void)
 	{
-		for (int n = 0; n < size; n++)
-			zbuffer[n] = INT16_MAX;
+		for (int i = 0; i < size; i++)
+			zbuffer[i] = 1.0f;
 	}
 
-	inline bool test(int16_t x0, int16_t y0, int16_t z)
+	bool test_update(int16_t x0, int16_t y0, float z)
 	{
-		int16_t *zb = get_zbuffer(x0, y0);
-		if (z < *zb)
+		float *zb = get_zbuffer(x0, y0);
+		if (z <= *zb)
 		{
 			*zb = z;
 			return true;
@@ -37,9 +36,9 @@ public:
 		return false;
 	}
 
-	inline bool test(int16_t *zbuf, int16_t z)
+	bool test_update(float *zbuf, float z)
 	{
-		if (z < *zbuf)
+		if (z <= *zbuf)
 		{
 			*zbuf = z;
 			return true;
@@ -47,13 +46,13 @@ public:
 		return false;
 	}
 
-	inline int16_t *get_zbuffer(int16_t x0, int16_t y0)
+	inline float *get_zbuffer(int16_t x0, int16_t y0)
 	{
 		return zbuffer + (y0 * xres) + x0;
 	}
 
 private:
-	int16_t *zbuffer;
+	float *zbuffer;
 	int size;
 	int16_t xres, yres;
 };
