@@ -18,7 +18,7 @@ m3d_camera::~m3d_camera()
 m3d_camera::m3d_camera(const struct m3d_input_point &position,
 		       const struct m3d_input_point &at,
 		       int16_t xres,
-		       int16_t yres) : position(position), transform(position, at), frustum(45.0f, xres, yres, 10.0f, 1000.0f)
+		       int16_t yres) : position(position), transform(position, at), frustum(45.0f, xres, yres, 100.0f)
 {
 	screen_resolution.x = xres;
 	screen_resolution.y = yres;
@@ -46,8 +46,8 @@ void m3d_camera::transform_to_viewpoint(m3d_vertex &vertex)
 
 void m3d_camera::project_to_screen(m3d_point &point, SDL_Point &pix)
 {
-	pix.x = (int)(point.myvector[X_C] * screen_resolution.x + screen_resolution.x) / 2;
-	pix.y = (int)(-point.myvector[Y_C] * screen_resolution.y + screen_resolution.y) / 2;
+	pix.x = lroundf((point.myvector[X_C] + 1.0f) * screen_resolution.x) / 2;
+	pix.y = lroundf((-point.myvector[Y_C] + 1.0f) * screen_resolution.y) / 2;
 }
 
 void m3d_camera::transform_and_project_to_screen(m3d_point &pointsrc, m3d_point &pointdst, SDL_Point &pix)
@@ -63,9 +63,9 @@ void m3d_camera::transform_and_project_to_screen(m3d_point &pointsrc, m3d_point 
 bool m3d_camera::is_visible(m3d_point &point, m3d_vector &normal)
 {
 	m3d_point temp(point);
-
 	// temp vector goes from viewpoint to point
 	temp.subtract(position);
+	transform.transform(temp, temp);
 	float cp = temp.dot_product(normal);
 	return (std::signbit(cp));
 }

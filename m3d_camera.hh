@@ -48,9 +48,13 @@ public:
 	const m3d_point &get_position(void) { return position; }
 
 private:
+	// Position of the camera in world coordinates
 	m3d_point position;
+	// Trasformation matrix from world to camera coordinates
 	m3d_matrix_camera transform;
+	// The frustum used to transform camera coordinates into homogeneous coordinates
 	m3d_frustum frustum;
+	// The screen resolution in pixels
 	struct m3d_screen_point screen_resolution;
 };
 
