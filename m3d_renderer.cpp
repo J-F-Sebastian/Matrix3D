@@ -556,7 +556,7 @@ void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
 {
     unsigned a = 1;
     uint32_t *output, *outputend;
-    int16_t *outz;
+    float *outz;
     float p0 = vtx[0].vertex.myvector[Z_C];
     float p1 = vtx[1].vertex.myvector[Z_C];
     float p2 = vtx[2].vertex.myvector[Z_C];
@@ -565,22 +565,22 @@ void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
     float p5 = (float)vtx[2].toscreen.x;
     unsigned runlen0 = vtx[2].toscreen.y - vtx[0].toscreen.y + 1;
     unsigned runlen1 = vtx[1].toscreen.y - vtx[0].toscreen.y + 1;
-    unsigned runlen2 = vtx[2].toscreen.y - vtx[1].toscreen.y;
+    unsigned runlen2 = vtx[2].toscreen.y - vtx[1].toscreen.y + 1;
     unsigned fillrunlen;
-    m3d_interp_step zrun0(runlen0, p0, p2);
-    m3d_interp_step zrun1(runlen1, p0, p1);
-    m3d_interp_step zrun2(runlen2, p1, p2);
-    m3d_interp_step xrun0(runlen0, p3, p5);
-    m3d_interp_step xrun1(runlen1, p3, p4);
-    m3d_interp_step xrun2(runlen2, p4, p5);
-    m3d_interp_step *zrleft, *zrright, *xrleft, *xrright;
+    m3d_interpolation_float zrun0(runlen0, p0, p2);
+    m3d_interpolation_float zrun1(runlen1, p0, p1);
+    m3d_interpolation_float zrun2(runlen2, p1, p2);
+    m3d_interpolation_float xrun0(runlen0, p3, p5);
+    m3d_interpolation_float xrun1(runlen1, p3, p4);
+    m3d_interpolation_float xrun2(runlen2, p4, p5);
+    m3d_interpolation_float *zrleft, *zrright, *xrleft, *xrright;
     int16_t y = (int16_t)vtx[0].toscreen.y;
 
     /*
      * check x values to understand who's the left half and who's the right
      */
     /* Draws a horizontal line from first half of points to second half */
-    if (xrun0.get_delta() <= xrun1.get_delta())
+    if (xrun0.deltavalue() <= xrun1.deltavalue())
     {
         zrleft = &zrun0;
         xrleft = &xrun0;
@@ -597,14 +597,14 @@ void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
 
     while (a++ < runlen1)
     {
-        fillrunlen = (unsigned)lroundf(xrright->get_val() - xrleft->get_val() + 1.0f);
-        m3d_interp_step sl(fillrunlen, zrleft->get_val(), zrright->get_val());
-        output = display->get_video_buffer((int16_t)lroundf(xrleft->get_val()), y);
+        fillrunlen = (unsigned)lroundf(xrright->value() - xrleft->value() + 1.0f);
+        m3d_interpolation_float sl(fillrunlen, zrleft->value(), zrright->value());
+        output = display->get_video_buffer((int16_t)lroundf(xrleft->value()), y);
         outputend = output + fillrunlen;
-        outz = zbuffer.get_zbuffer((int16_t)lroundf(xrleft->get_val()), y);
+        outz = zbuffer.get_zbuffer((int16_t)lroundf(xrleft->value()), y);
         while (output < outputend)
         {
-            if (zbuffer.test(outz, sl.get_int_val()))
+            if (zbuffer.test_update(outz, sl.value()))
             {
                 *output = vtx[0].color.getColor();
             }
@@ -633,14 +633,14 @@ void m3d_renderer_flatf::triangle_fill_flat(struct m3d_renderer_data vtx[])
     a = 1;
     while (a++ < runlen2)
     {
-        fillrunlen = (unsigned)lroundf(xrright->get_val() - xrleft->get_val() + 1.0f);
-        m3d_interp_step sl(fillrunlen, zrleft->get_val(), zrright->get_val());
-        output = display->get_video_buffer((int16_t)lroundf(xrleft->get_val()), y);
+        fillrunlen = (unsigned)lroundf(xrright->value() - xrleft->value() + 1.0f);
+        m3d_interpolation_float sl(fillrunlen, zrleft->value(), zrright->value());
+        output = display->get_video_buffer((int16_t)lroundf(xrleft->value()), y);
         outputend = output + fillrunlen;
-        outz = zbuffer.get_zbuffer((int16_t)lroundf(xrleft->get_val()), y);
+        outz = zbuffer.get_zbuffer((int16_t)lroundf(xrleft->value()), y);
         while (output < outputend)
         {
-            if (zbuffer.test(outz, sl.get_int_val()))
+            if (zbuffer.test_update(outz, sl.value()))
             {
                 *output = vtx[0].color.getColor();
             }
@@ -751,6 +751,7 @@ void m3d_renderer_shaded::triangle_fill_shaded(struct m3d_renderer_data vtx[],
                                                unsigned runlen[],
                                                m3d_world &world)
 {
+#if 0
     unsigned a = 1;
     int16_t *ptscursora, *ptscursorb;
     uint32_t *output;
@@ -879,6 +880,7 @@ void m3d_renderer_shaded::triangle_fill_shaded(struct m3d_renderer_data vtx[],
         right->step();
         y++;
     }
+#endif
 }
 
 /*
@@ -889,6 +891,7 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(struct m3d_renderer_data 
                                                        unsigned runlen[],
                                                        m3d_world &world)
 {
+#if 0
     unsigned a = 1;
     int16_t *ptscursora, *ptscursorb;
     uint32_t *output, *outputend;
@@ -989,6 +992,7 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(struct m3d_renderer_data 
         right->step();
         y++;
     }
+#endif
 }
 
 /*
@@ -999,6 +1003,7 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(struct m3d_renderer_data vt
                                                      unsigned runlen[],
                                                      m3d_world &world)
 {
+#if 0
     unsigned a = 1;
     int16_t *ptscursora, *ptscursorb;
     uint32_t *output, *outputend;
@@ -1147,4 +1152,5 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(struct m3d_renderer_data vt
         vright->step();
         y++;
     }
+#endif
 }
