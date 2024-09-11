@@ -15,8 +15,8 @@ public:
 		m3d_point vertex;
 		m3d_vector normal;
 		SDL_Point toscreen;
-		float lightint;
-		m3d_color color;
+		m3d_color Kspec, Kdiff;
+		float specint, diffint;
 	};
 
 	/** Default constructor */
@@ -77,9 +77,11 @@ protected:
 	void store_zscanlines(unsigned runlen, float val1, float val2, unsigned start = 0);
 	/*
 	 * Compute the light intensity for vertex vtx using the world description.
-	 * All coordinates are in the WORLD reference system, i. e. the origin is (0,0,0).
+	 * All coordinates are in the WORLD reference system.
 	 */
-	void illuminate(struct m3d_renderer_data &vtx, m3d_world &world);
+	void diffuse_lighting(struct m3d_renderer_data &vtx, m3d_render_object &obj, m3d_world &world);
+
+	void specular_lighting(struct m3d_renderer_data &vtx, m3d_render_object &obj, m3d_world &world);
 
 	uint32_t *get_video_buffer(int16_t x0, int16_t y0);
 
@@ -146,7 +148,6 @@ public:
 
 protected:
 	virtual void triangle_fill_shaded(struct m3d_renderer_data vtx[],
-					  unsigned runlen[],
 					  m3d_world &world);
 };
 
@@ -156,14 +157,17 @@ class m3d_renderer_shaded_gouraud : public m3d_renderer_shaded
 public:
 	/** Default constructor */
 	m3d_renderer_shaded_gouraud() : m3d_renderer_shaded() {};
-	m3d_renderer_shaded_gouraud(m3d_display *disp) : m3d_renderer_shaded(disp) {};
+	m3d_renderer_shaded_gouraud(m3d_display *disp) : m3d_renderer_shaded(disp) { iscanline = new float[display->get_ymax() * 2]; };
 
 	/** Default destructor */
 	virtual ~m3d_renderer_shaded_gouraud() {};
 
 protected:
+	// The scanline light intensity buffer
+	float *iscanline;
+
+	void store_iscanlines(unsigned runlen, float val1, float val2, unsigned start = 0);
 	virtual void triangle_fill_shaded(struct m3d_renderer_data vtx[],
-					  unsigned runlen[],
 					  m3d_world &world);
 };
 
@@ -180,7 +184,6 @@ public:
 
 protected:
 	virtual void triangle_fill_shaded(struct m3d_renderer_data vtx[],
-					  unsigned runlen[],
 					  m3d_world &world);
 };
 
