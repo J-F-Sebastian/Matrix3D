@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include "m3d_math_vector.hh"
+#include "m3d_color.hh"
 
 /*
  * Interpolation classes
@@ -98,6 +99,30 @@ public:
 
 private:
 	int start, val, delta;
+};
+
+/*
+ * Linear interpolation of colors.
+ */
+class m3d_interpolation_color : public m3d_interpolation
+{
+public:
+	m3d_interpolation_color() : m3d_interpolation(0), start(0), val(0), r(0), g(0), b(0) {}
+	explicit m3d_interpolation_color(const int steps);
+	explicit m3d_interpolation_color(const int steps, m3d_color &val1, m3d_color &val2);
+
+	void init(const int steps, m3d_color &val1, m3d_color &val2);
+
+	virtual void step(void);
+
+	void valuearray(uint32_t *out);
+
+	inline uint32_t value(void) { return val.color; }
+
+private:
+	union m3d_color::m3d_color_channels start, val;
+	int r, g, b;
+	int ra, ga, ba;
 };
 
 /*
