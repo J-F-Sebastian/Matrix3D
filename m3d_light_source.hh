@@ -7,27 +7,22 @@
 #include "m3d_vertex.hh"
 #include "m3d_color.hh"
 
-// base class, abstract
+/*
+ * Base abstract class for light sources
+ */
 class m3d_light_source
 {
 public:
-	/** Default constructor */
-	m3d_light_source() : color(), sintensity(0.0f){};
+	m3d_light_source() : color(), sintensity(0.0f) {};
+	virtual ~m3d_light_source() {};
+	m3d_light_source(const m3d_light_source &other) : color(other.color), sintensity(other.sintensity) {};
+	m3d_light_source(const m3d_color &color, float src_intensity) : color(color), sintensity(src_intensity) {};
 
-	/** Default destructor */
-	virtual ~m3d_light_source(){};
-	/** Copy constructor
-	 *  \param other Object to copy from
-	 */
-	m3d_light_source(const m3d_light_source &other) : color(other.color), sintensity(other.sintensity){};
+	virtual float get_intensity(const m3d_point &objpos) = 0;
+	m3d_color get_color(void) { return color; }
 
-	m3d_light_source(const m3d_color &color, float src_intensity) : color(color), sintensity(src_intensity){};
-
-	float get_intensity(const m3d_point & /*objpos*/, const m3d_point & /*viewer*/) { return sintensity; }
-
-	virtual m3d_color get_color(void) = 0;
 	void set_color(const m3d_color &clr) { color = clr; }
-	void set_src_intensity(float intensity) { sintensity = (std::signbit(intensity)) ? 0.0f : intensity; };
+	void set_src_intensity(float intensity) { sintensity = intensity; };
 
 	virtual void print(void) = 0;
 
@@ -36,43 +31,44 @@ protected:
 	float sintensity;
 };
 
-// Ambient light
+/*
+ * Ambient light.
+ * The light baseline, diffuse illumination of the ambient of the scene.
+ * This light source is constant everywhere and does not attenuate with distance
+ * direction or other parameters.
+ */
 class m3d_ambient_light : public m3d_light_source
 {
 public:
-	m3d_ambient_light() : m3d_light_source(){};
-	virtual ~m3d_ambient_light(){};
+	m3d_ambient_light() : m3d_light_source() {};
+	virtual ~m3d_ambient_light() {};
 
-	m3d_ambient_light(const m3d_ambient_light &other) : m3d_light_source(other){};
+	m3d_ambient_light(const m3d_ambient_light &other) : m3d_light_source(other) {};
 
 	m3d_ambient_light(const m3d_color &color,
 			  const float src_intensity) : m3d_light_source(color, src_intensity) {}
 
-	// Ambient light is constant everywhere, objects and viewer position are not involved
-	// get_intensity is inherited
-	virtual m3d_color get_color(void) { return color; }
+	virtual float get_intensity(const m3d_point &objpos) { return sintensity; }
 
 	virtual void print(void);
 };
 
-// point light source
+/*
+ * Point light.
+ * The point light source is spherical and it emits a light intensity which is
+ * inversely proportional to the distance of an object.
+ * The intensity fall-off does not depend upon position or incidence angles, just distance.
+ */
 class m3d_point_light_source : public m3d_light_source
 {
 public:
-	/** Default constructor */
 	m3d_point_light_source() : m3d_light_source(), position(), Kc(0.0f), Kl(0.0f), Kq(0.0f) {}
-
-	/** Default destructor */
-	virtual ~m3d_point_light_source(){};
-	/** Copy constructor
-	 *  \param other Object to copy from
-	 */
+	virtual ~m3d_point_light_source() {};
 	m3d_point_light_source(const m3d_point_light_source &other) : m3d_light_source(other),
 								      position(other.position),
 								      Kc(other.Kc),
 								      Kl(other.Kl),
 								      Kq(other.Kq) {}
-
 	m3d_point_light_source(const struct m3d_input_point &position,
 			       const m3d_color &color,
 			       const float Kc,
@@ -84,11 +80,9 @@ public:
 							Kl(Kl),
 							Kq(Kq) {}
 
-	inline const m3d_point &get_position(void) { return position; }
+	const m3d_point &get_position(void) const { return position; }
 
-	float get_intensity(const m3d_point &objpos, const m3d_point &viewer);
-
-	virtual m3d_color get_color(void) { return color; }
+	virtual float get_intensity(const m3d_point &objpos);
 
 	virtual void print(void);
 
@@ -98,7 +92,12 @@ protected:
 	float Kc, Kl, Kq;
 };
 
-// spot light source
+/*
+ * Spot light.
+ * The spot light source is conical and it emits a light intensity which is
+ * inversely proportional to the distance of an object.
+ * The intensity fall-off does not depend upon position or incidence angles, just distance.
+ */
 class m3d_spot_light_source : public m3d_point_light_source
 {
 public:
@@ -106,7 +105,7 @@ public:
 	m3d_spot_light_source() : m3d_point_light_source() {}
 
 	/** Default destructor */
-	virtual ~m3d_spot_light_source(){};
+	virtual ~m3d_spot_light_source() {};
 	/** Copy constructor
 	 *  \param other Object to copy from
 	 */
@@ -120,13 +119,12 @@ public:
 			      const float Kq,
 			      const float intensity) : m3d_point_light_source(position, color, Kc, Kl, Kq, intensity), direction(lookat)
 	{
-		m3d_vector temppos(get_position());
-		direction.subtract(temppos);
+		direction.subtract(get_position());
 		direction.normalize();
 	}
 
 	// World coordinates not rotated
-	float get_intensity(const m3d_point &objpos, const m3d_point &viewer);
+	virtual float get_intensity(const m3d_point &objpos);
 
 	virtual void print(void);
 
