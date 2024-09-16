@@ -120,7 +120,7 @@ public:
 	 * in out.
 	 * Sums for R, G, B channels are clamped to 255.
 	 */
-	static void add_colors(m3d_color *array[], unsigned num, m3d_color &out);
+	static void add_colors(m3d_color array[], unsigned num, m3d_color &out);
 
 	void print(void);
 

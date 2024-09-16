@@ -119,21 +119,25 @@ void m3d_color::average_colors(m3d_color array[], unsigned num, m3d_color &out)
  * in out.
  * Sums for R, G, B channels are clamped to 255.
  */
-void m3d_color::add_colors(m3d_color *array[], unsigned num, m3d_color &out)
+void m3d_color::add_colors(m3d_color array[], unsigned num, m3d_color &out)
 {
 	unsigned sumr = 0, sumg = 0, sumb = 0;
 
 	while (num--)
 	{
-		sumr += (*array)->getColor() & 0xFF;
-		sumg += ((*array)->getColor() >> 8) & 0xFF;
-		sumb += ((*array)->getColor() >> 16) & 0xFF;
-		array++;
+		sumr += array[num].mycolor.channels[R_CHANNEL];
+		sumg += array[num].mycolor.channels[G_CHANNEL];
+		sumb += array[num].mycolor.channels[B_CHANNEL];
 	}
 
-	sumr %= 256;
-	sumg %= 256;
-	sumb %= 256;
+	if (sumr > 255)
+		sumr = 255;
+
+	if (sumg > 255)
+		sumg = 255;
+
+	if (sumb > 255)
+		sumb = 255;
 
 	out.setColor((uint8_t)sumr, (uint8_t)sumg, (uint8_t)sumb, 0);
 }
