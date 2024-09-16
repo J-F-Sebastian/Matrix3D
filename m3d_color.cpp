@@ -98,18 +98,23 @@ void m3d_color::average_colors(m3d_color array[], unsigned num, m3d_color &out)
 
 	while (count--)
 	{
-		sumr += array[count].getColor() & 0xFF;
-		sumg += (array[count].getColor() >> 8) & 0xFF;
-		sumb += (array[count].getColor() >> 16) & 0xFF;
+		sumr += array[count].mycolor.channels[R_CHANNEL];
+		sumg += array[count].mycolor.channels[G_CHANNEL];
+		sumb += array[count].mycolor.channels[B_CHANNEL];
 	}
 
 	sumr /= num;
 	sumg /= num;
 	sumb /= num;
 
-	sumr %= 256;
-	sumg %= 256;
-	sumb %= 256;
+	if (sumr > 255)
+		sumr = 255;
+
+	if (sumg > 255)
+		sumg = 255;
+
+	if (sumb > 255)
+		sumb = 255;
 
 	out.setColor((uint8_t)sumr, (uint8_t)sumg, (uint8_t)sumb, 0);
 }
