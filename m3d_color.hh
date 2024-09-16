@@ -35,19 +35,19 @@ public:
 	};
 
 	/** Default destructor */
-	~m3d_color(){};
+	~m3d_color() {};
 
 	/** Copy constructor
 	 *  \param other Object to copy from
 	 */
-	m3d_color(const m3d_color &other) : mycolor(other.mycolor){};
+	m3d_color(const m3d_color &other) : mycolor(other.mycolor) {};
 
-	m3d_color(uint32_t color)
+	explicit m3d_color(uint32_t color)
 	{
 		mycolor.color = color;
 	};
 
-	m3d_color(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha)
+	explicit m3d_color(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha)
 	{
 		setColor(red, green, blue, alpha);
 	}
