@@ -76,7 +76,7 @@ uint32_t m3d_color::brighten_channels2(float chansint[])
 {
 	m3d_color_channels myunion;
 
-	for (unsigned i = 0; i < A_CHANNEL; i++)
+	for (unsigned i = B_CHANNEL; i < A_CHANNEL; i++)
 	{
 		if (std::signbit(chansint[i]))
 		{
