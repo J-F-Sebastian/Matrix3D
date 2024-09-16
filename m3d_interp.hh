@@ -2,6 +2,7 @@
 #define M3D_INTERP_HH_INCLUDED
 
 #include <cmath>
+#include <cstdint>
 #include "m3d_math_vector.hh"
 #include "m3d_color.hh"
 
@@ -30,7 +31,7 @@
 class m3d_interpolation
 {
 public:
-	m3d_interpolation(const int steps) : steps(steps)
+	explicit m3d_interpolation(const int steps) : steps(steps)
 	{
 		if (this->steps < 1)
 			this->steps = 1;
@@ -107,7 +108,13 @@ private:
 class m3d_interpolation_color : public m3d_interpolation
 {
 public:
-	m3d_interpolation_color() : m3d_interpolation(0), start(0), val(0), r(0), g(0), b(0) {}
+	m3d_interpolation_color() : m3d_interpolation(0)
+	{
+		start.color = val.color = 0;
+		delta[0] = delta[1] = delta[2] = 0;
+		acc[0] = acc[1] = acc[2] = 0;
+	}
+
 	explicit m3d_interpolation_color(const int steps);
 	explicit m3d_interpolation_color(const int steps, m3d_color &val1, m3d_color &val2);
 
@@ -121,8 +128,8 @@ public:
 
 private:
 	union m3d_color::m3d_color_channels start, val;
-	int r, g, b;
-	int ra, ga, ba;
+	unsigned delta[3];
+	unsigned acc[3];
 };
 
 /*
@@ -142,6 +149,8 @@ public:
 	m3d_interpolation_float_perspective(int steps, float z1, float z2, float val1, float val2);
 
 	virtual void step(void);
+
+	void valuearray(float *out);
 
 	inline float value(void) { return val; }
 
