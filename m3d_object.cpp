@@ -44,7 +44,6 @@ int m3d_object::create(struct m3d_input_point *_vertices,
 			it.position = _vertices->vector;
 			_vertices++;
 		}
-		vertex_visible.reset();
 	}
 	else
 	{
@@ -68,24 +67,8 @@ int m3d_object::create(struct m3d_input_point *_vertices,
 			it.index[0] = _mesh->index[0];
 			it.index[1] = _mesh->index[1];
 			it.index[2] = _mesh->index[2];
-			/*
-			 * compute the surface normal.
-			 * vertices will be used this way:
-			 *    0 -> 1   vector 1
-			 *    0 -> 2   vector 2
-			 *
-			 * normal is vector1 X vector2
-			 */
-			a = vertices.at(_mesh->index[1]).position;
-			a.subtract(vertices.at(_mesh->index[0]).position);
-			b = vertices.at(_mesh->index[2]).position;
-			b.subtract(vertices.at(_mesh->index[0]).position);
-			a.cross_product(b);
-			a.normalize();
-			it.normal = a;
 			_mesh++;
 		}
-		triangle_visible.reset();
 	}
 	else
 	{
@@ -105,7 +88,7 @@ void m3d_object::roll(float angle)
 {
 	m3d_matrix temp = m3d_matrix_roll(angle);
 	update_object(temp);
-	visibility_uptodate = false;
+	uptodate = false;
 }
 
 /*
@@ -115,7 +98,7 @@ void m3d_object::yaw(float angle)
 {
 	m3d_matrix temp = m3d_matrix_yaw(angle);
 	update_object(temp);
-	visibility_uptodate = false;
+	uptodate = false;
 }
 
 /*
@@ -125,14 +108,14 @@ void m3d_object::pitch(float angle)
 {
 	m3d_matrix temp = m3d_matrix_pitch(angle);
 	update_object(temp);
-	visibility_uptodate = false;
+	uptodate = false;
 }
 
 // move the object to a new location
 void m3d_object::move(const m3d_vector &newposition)
 {
 	center.add(newposition);
-	visibility_uptodate = false;
+	uptodate = false;
 }
 
 void m3d_object::print()
@@ -184,9 +167,7 @@ void m3d_object::compute_center()
 		center.add(it.position);
 	}
 
-	center.myvector[X_C] *= part;
-	center.myvector[Y_C] *= part;
-	center.myvector[Z_C] *= part;
+	center.scale(part);
 	center.myvector[T_C] = 1.0f;
 }
 
@@ -208,40 +189,6 @@ void m3d_object::update_object(m3d_matrix &transform)
 	/* MISSING */
 }
 
-void m3d_object::compute_visibility(m3d_camera &viewpoint)
-{
-	m3d_point temp;
-	unsigned i = 0;
-
-	if (visibility_uptodate)
-	{
-		return;
-	}
-
-	triangle_visible.reset();
-	vertex_visible.reset();
-	/*
-	 * Compute visibility by adding center to the first triangle vertex,
-	 * then subtracting the viewpoint, then invoking is_visible.
-	 */
-	for (auto &it : mesh)
-	{
-		temp = vertices.at(it.index[0]).position;
-		// temp is now in world coordinates
-		temp.add(center);
-		triangle_visible[i] = viewpoint.is_visible(temp, it.normal);
-		if (triangle_visible[i])
-		{
-			vertex_visible[it.index[0]] = true;
-			vertex_visible[it.index[1]] = true;
-			vertex_visible[it.index[2]] = true;
-		}
-		++i;
-	}
-
-	visibility_uptodate = true;
-}
-
 /*************************************/
 /****** class m3d_render_object ******/
 /*************************************/
@@ -253,6 +200,7 @@ int m3d_render_object::create(struct m3d_input_point *_vertices,
 			      m3d_color &_color)
 {
 	int retcode;
+	m3d_vector a, b;
 
 	retcode = m3d_object::create(_vertices, vertnum, _mesh, meshnum);
 
@@ -261,23 +209,47 @@ int m3d_render_object::create(struct m3d_input_point *_vertices,
 		return (retcode);
 	}
 
-	// Set vertices normals by summing triangles' normals to every
-	// vertices.
-	// Triangles' normals are orthogonal to the surface, Vertices' normals
-	// are the normalized sum of surfaces' normals
-	//
+	/*
+	 * Set vertices normals by summing triangles' normals to every
+	 * vertices.
+	 * Triangles' normals are orthogonal to the surface, Vertices' normals
+	 * are the normalized sum of surfaces' normals.
+	 * Surfaces' normals are normalized after building the vertices' normals,
+	 * so that the area of a surface weights the normals of the vertices
+	 * composing the surface.
+	 */
 	for (auto &it : mesh)
 	{
+		/*
+		 * compute surface's normal.
+		 * vertices will be used this way:
+		 *    0 -> 1   vector 1
+		 *    0 -> 2   vector 2
+		 *
+		 * normal is vector1 X vector2
+		 */
+		a = vertices.at(it.index[1]).position;
+		a.subtract(vertices.at(it.index[0]).position);
+		b = vertices.at(it.index[2]).position;
+		b.subtract(vertices.at(_mesh->index[0]).position);
+		a.cross_product(b);
+
+		/*
+		 * Add surface normal to vertices' normals
+		 */
 		vertices.at(it.index[0]).normal.add(it.normal);
 		vertices.at(it.index[1]).normal.add(it.normal);
 		vertices.at(it.index[2]).normal.add(it.normal);
+
+		a.normalize();
+		it.normal = a;
 	}
 
 	// Normalize
 	for (auto &it : vertices)
 	{
-		it.normal.print();
 		it.normal.normalize();
+		it.normal.print();
 	}
 
 	color = _color;

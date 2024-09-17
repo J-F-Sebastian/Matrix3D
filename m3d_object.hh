@@ -9,7 +9,7 @@
 #include "m3d_camera.hh"
 
 #define M3D_MAX_VERTICES (10240)
-#define M3D_MAX_TRIANGLES (10240 * 4)
+#define M3D_MAX_TRIANGLES (10240)
 
 /*
  * This data structure is used to create a mesh of points,
@@ -59,12 +59,9 @@ public:
 	/** Default constructor */
 	m3d_object() : vertices(),
 		       mesh(),
-		       vertex_visible(),
-		       triangle_visible(),
 		       direction(),
 		       center(),
-		       z_sorting(0.0f),
-		       visibility_uptodate(false) {};
+		       uptodate(false) {};
 	/** Default destructor */
 	~m3d_object() {};
 	/** Copy constructor
@@ -72,12 +69,9 @@ public:
 	 */
 	m3d_object(const m3d_object &other) : vertices(other.vertices),
 					      mesh(other.mesh),
-					      vertex_visible(other.vertex_visible),
-					      triangle_visible(other.triangle_visible),
 					      direction(other.direction),
 					      center(other.center),
-					      z_sorting(0.0f),
-					      visibility_uptodate(false) {};
+					      uptodate(false) {};
 
 	// Set vertices, mesh, their normals and cleanup bitmaps
 	int create(struct m3d_input_point *_vertices,
@@ -103,9 +97,6 @@ public:
 	// move the object to a new location along the passed-in vector
 	void move(const m3d_vector &newposition);
 
-	// Compute triangles visibility
-	void compute_visibility(m3d_camera &viewpoint);
-
 	void print(void);
 
 	// vertices are always in object coordinates, referring to a center in [0,0,0]
@@ -113,15 +104,10 @@ public:
 	std::vector<m3d_vertex> vertices;
 	// mesh stores triangles and their normals
 	std::vector<m3d_triangle> mesh;
-	// visible vertices, visible triangles
-	std::bitset<M3D_MAX_VERTICES> vertex_visible;
-	std::bitset<M3D_MAX_TRIANGLES> triangle_visible;
 	// Object direction, used for orientation and texturing
 	m3d_vector direction;
 	// center is always in world coordinates
 	m3d_point center;
-	// This is a convenience for sorting
-	float z_sorting;
 
 protected:
 	void update_object(m3d_matrix &transform);
@@ -129,7 +115,7 @@ protected:
 private:
 	/** Compute the object center */
 	void compute_center(void);
-	bool visibility_uptodate;
+	bool uptodate;
 };
 
 class m3d_render_object : public m3d_object
@@ -142,13 +128,13 @@ public:
 	};
 
 	/** Default constructor */
-	m3d_render_object() : m3d_object(), color() {};
+	m3d_render_object() : m3d_object(), color(), flags(0), z_sorting(0.0f) {};
 	/** Default destructor */
 	virtual ~m3d_render_object() {};
 	/** Copy constructor
 	 *  \param other Object to copy from
 	 */
-	m3d_render_object(const m3d_render_object &other) : m3d_object(other), color(other.color) {};
+	m3d_render_object(const m3d_render_object &other) : m3d_object(other), color(other.color), flags(0), z_sorting(0.0f) {};
 
 	// creates an object starting from a m3d_trimesh array.
 	// vertices points to an array of m3d_point structs, describing the geometry of all
@@ -169,6 +155,8 @@ public:
 	m3d_color color;
 
 	unsigned flags;
+	// This is a convenience for sorting
+	float z_sorting;
 };
 
 #endif // M3D_OBJECT_H
