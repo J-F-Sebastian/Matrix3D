@@ -282,8 +282,14 @@ void m3d_renderer::store_zscanlines(unsigned runlen, float val1, float val2, uns
 // TBD: consider all lights as white RGB(255,255,255) to reduce computation
 void m3d_renderer::diffuse_lighting(struct m3d_renderer_data &vtx, m3d_render_object &obj, m3d_world &world)
 {
+    m3d_color temp[2];
     // Ambient light does not depend on position anyway...
     float lightint = world.ambient_light.get_intensity(vtx.vertex);
+    temp[0] = world.ambient_light.get_color();
+    temp[0].brighten(lightint);
+    temp[0] = temp[0] * obj.color;
+    vtx.diffint = lightint;
+    lightint = 0.0f;
     // Now we sum all diffuse contributions considering light position w.r.t. vtx position and the surface normal.
     for (auto lights : world.lights_list)
     {
@@ -291,11 +297,12 @@ void m3d_renderer::diffuse_lighting(struct m3d_renderer_data &vtx, m3d_render_ob
         L.subtract(vtx.vertex);
         L.normalize();
         float dot = L.dot_product(vtx.normal);
-        lightint += lights->get_intensity(vtx.vertex) * m3d_max(dot, 0);
+        lightint += lights->get_intensity(vtx.vertex) * m3d_max(dot, 0.0f);
     }
-    vtx.diffint = lightint;
-    vtx.Kdiff = obj.color;
-    vtx.Kdiff.brighten(lightint);
+    temp[1] = obj.color;
+    temp[1].brighten(lightint);
+    vtx.diffint += lightint;
+    m3d_color::add_colors(temp, 2, vtx.Kdiff);
 }
 
 void m3d_renderer::specular_lighting(struct m3d_renderer_data &vtx, m3d_render_object &obj, m3d_world &world)
