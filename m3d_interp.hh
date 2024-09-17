@@ -159,105 +159,26 @@ private:
 };
 
 /*
- * Reciprocal linear interpolation of vectors.
+ * Linear interpolation of vectors with perspective correction.
  *
- * vector(N)/z(N) = vector1/z1 + N*vector2/z2/steps
+ * 1/z3 = 1/z1 + (1/z2 - 1/z1)*n
  *
- * vector(N) = z(N) * (vector1/z1 + N*vector1/z2/steps)
+ * vector(N) = z3 * (vector1/z1 + (vector2/z2 - vector1/z1)*n)
  */
-class m3d_reciprocal_z_interpv_step
+class m3d_interpolation_vector_perspective : public m3d_interpolation
 {
 public:
-	m3d_reciprocal_z_interpv_step(int steps, float z1, float z2, m3d_vector &v1, m3d_vector &v2) : steps(steps)
-	{
-		vector = v1;
-		vector.myvector[X_C] /= z1;
-		vector.myvector[Y_C] /= z1;
-		vector.myvector[Z_C] /= z1;
+	m3d_interpolation_vector_perspective(int steps, float z1, float z2, m3d_vector &v1, m3d_vector &v2);
 
-		if (steps)
-		{
-			deltavector = v2;
-			deltavector.myvector[X_C] /= z2;
-			deltavector.myvector[Y_C] /= z2;
-			deltavector.myvector[Z_C] /= z2;
-			// (val2/z2 - val1/z1)
-			deltavector.subtract(vector);
-			// (val2/z2 - val1/z1)/steps
-			deltavector.myvector[X_C] /= (float)steps;
-			deltavector.myvector[Y_C] /= (float)steps;
-			deltavector.myvector[Z_C] /= (float)steps;
-		}
-		else
-		{
-			deltavector.myvector[X_C] = 0.0f;
-			deltavector.myvector[Y_C] = 0.0f;
-			deltavector.myvector[Z_C] = 0.0f;
-		}
+	virtual void step(void);
 
-		stepvector = vector;
-		stepvector.myvector[X_C] *= z1;
-		stepvector.myvector[Y_C] *= z1;
-		stepvector.myvector[Z_C] *= z1;
+	void valuearray(m3d_vector *out);
 
-		recipz = 1.0f / z1;
-		if (steps)
-		{
-			deltarecipz = (1.0f / z2 - 1.0f / z1) / (float)steps;
-		}
-		else
-		{
-			deltarecipz = 0.0;
-		}
-	}
-
-	float get_z(void)
-	{
-		return 1.0f / recipz;
-	}
-
-	int get_int_z(void)
-	{
-		return (int)(1.0f / recipz);
-	}
-
-	float get_recipz(void)
-	{
-		return recipz;
-	}
-
-	m3d_vector &get_vectorvalue(void)
-	{
-		return stepvector;
-	}
-
-	void step(void)
-	{
-		if (steps)
-		{
-			vector.add(deltavector);
-			recipz += deltarecipz;
-			stepvector = vector;
-			stepvector.myvector[X_C] /= recipz;
-			stepvector.myvector[Y_C] /= recipz;
-			stepvector.myvector[Z_C] /= recipz;
-			steps--;
-		}
-	}
-
-	bool last_step(void)
-	{
-		return (steps) ? false : true;
-	}
+	inline m3d_vector &value(void) { return val; }
 
 private:
-	int steps;
-	/* reciprocal of Z */
-	float recipz;
-	m3d_vector vector;
-	m3d_vector deltavector;
-	m3d_vector stepvector;
-	float deltarecipz;
+	float z1inv, deltazinv;
+	m3d_vector vector1, deltavector, val;
 };
 
 #endif
