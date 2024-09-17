@@ -121,6 +121,12 @@ public:
         void normalize(void);
 
         /*
+         * perform scaling, multiply X,Y,Z by a scalar value.
+         * T is unchanged.
+         */
+        void scale(float val);
+
+        /*
          * perform mirroring of a vector, same as negate in algebra.
          * The resulting vector is a simmetry through the origin (0,0,0).
          */

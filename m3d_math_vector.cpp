@@ -123,6 +123,13 @@ void m3d_vector::normalize()
         }
 }
 
+void m3d_vector::scale(float val)
+{
+        myvector[X_C] *= val;
+        myvector[Y_C] *= val;
+        myvector[Z_C] *= val;
+}
+
 /*
  * perform mirroring of a vector, same as negate in algebra.
  * The resulting vector is a simmetry through the origin (0,0,0).
