@@ -139,14 +139,18 @@ class m3d_renderer_shaded : public m3d_renderer
 public:
 	/** Default constructor */
 	m3d_renderer_shaded() : m3d_renderer() {};
-	m3d_renderer_shaded(m3d_display *disp) : m3d_renderer(disp) {};
+	explicit m3d_renderer_shaded(m3d_display *disp) : m3d_renderer(disp) { iscanline = new float[display->get_ymax() * 2]; };
 
 	/** Default destructor */
-	virtual ~m3d_renderer_shaded() {};
+	virtual ~m3d_renderer_shaded() { delete iscanline; };
 
 	virtual void render(m3d_world &world);
 
 protected:
+	// The scanline light intensity buffer
+	float *iscanline;
+
+	void store_iscanlines(unsigned runlen, float z1, float z2, float val1, float val2, unsigned start = 0);
 	virtual void triangle_fill_shaded(struct m3d_renderer_data vtx[],
 					  m3d_world &world);
 };
@@ -157,16 +161,16 @@ class m3d_renderer_shaded_gouraud : public m3d_renderer_shaded
 public:
 	/** Default constructor */
 	m3d_renderer_shaded_gouraud() : m3d_renderer_shaded() {};
-	m3d_renderer_shaded_gouraud(m3d_display *disp) : m3d_renderer_shaded(disp) { iscanline = new float[display->get_ymax() * 2]; };
+	explicit m3d_renderer_shaded_gouraud(m3d_display *disp) : m3d_renderer_shaded(disp) { iscanline = new uint32_t[display->get_ymax() * 2]; };
 
 	/** Default destructor */
-	virtual ~m3d_renderer_shaded_gouraud() {};
+	virtual ~m3d_renderer_shaded_gouraud() { delete iscanline; };
 
 protected:
-	// The scanline light intensity buffer
-	float *iscanline;
+	// The scanline light color buffer
+	uint32_t *iscanline;
 
-	void store_iscanlines(unsigned runlen, float val1, float val2, unsigned start = 0);
+	void store_iscanlines(unsigned runlen, m3d_color &val1, m3d_color &val2, unsigned start = 0);
 	virtual void triangle_fill_shaded(struct m3d_renderer_data vtx[],
 					  m3d_world &world);
 };
