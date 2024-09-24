@@ -31,16 +31,18 @@ public:
 		   int16_t xres,
 		   int16_t yres);
 
+	// Transform a world coordinates point inside the view frustum to camera coordinates
+	void to_camera(m3d_point &pointsrc, m3d_point &pointdst);
+	// Transform a world coordinates vector inside the view frustum to camera coordinates
+	void to_camera(m3d_vector &vecsrc, m3d_vector &vecdst);
 	// Project a world coordinates point inside the view frustum to homogeneous clip space coordinates
-	void projection(m3d_point &point);
-	// Transform point from world coordinates to camera coordinates
-	void transform_to_viewpoint(m3d_point &pointsrc, m3d_point &pointdst);
-	// Transform vertex from world coordinates to camera coordinates
-	void transform_to_viewpoint(m3d_vertex &vertexsrc);
+	void projection(m3d_point &pointsrc, m3d_point &pointdst);
+	// Project a world coordinates vector inside the view frustum to homogeneous clip space coordinates
+	void projection(m3d_vector &vecsrc, m3d_vector &vecdst);
 	// Project point from homogeneous clip space coordinates to screen
-	void project_to_screen(m3d_point &point, SDL_Point &pix);
+	void to_screen(m3d_point &point, SDL_Point &pix);
 	// Project point from world coordinates to screen
-	void transform_and_project_to_screen(m3d_point &pointsrc, m3d_point &pointdst, SDL_Point &pix);
+	void projection_to_screen(m3d_point &pointsrc, m3d_point &pointdst, SDL_Point &pix);
 	// Compute visibility using normal as a surface normal vector and point to compute
 	// the vector going from camera to point itself in world coordinates.
 	bool is_visible(m3d_point &point, m3d_vector &normal);

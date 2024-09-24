@@ -24,40 +24,45 @@ m3d_camera::m3d_camera(const struct m3d_input_point &position,
 	screen_resolution.y = yres;
 }
 
-void m3d_camera::projection(m3d_point &point)
-{
-	transform.transform(point, point);
-	frustum.transform(point, point);
-	point.myvector[X_C] /= point.myvector[T_C];
-	point.myvector[Y_C] /= point.myvector[T_C];
-	point.myvector[Z_C] /= point.myvector[T_C];
-}
-
-void m3d_camera::transform_to_viewpoint(m3d_point &pointsrc, m3d_point &pointdst)
+void m3d_camera::to_camera(m3d_point &pointsrc, m3d_point &pointdst)
 {
 	transform.transform(pointsrc, pointdst);
 }
 
-void m3d_camera::transform_to_viewpoint(m3d_vertex &vertex)
+void m3d_camera::to_camera(m3d_vector &vecsrc, m3d_vector &vectdst)
 {
-	transform.transform(vertex.position, vertex.position);
-	transform.rotate(vertex.normal, vertex.normal);
+	transform.transform(vecsrc, vectdst);
 }
 
-void m3d_camera::project_to_screen(m3d_point &point, SDL_Point &pix)
-{
-	pix.x = lroundf((point.myvector[X_C] + 1.0f) * screen_resolution.x) / 2;
-	pix.y = lroundf((-point.myvector[Y_C] + 1.0f) * screen_resolution.y) / 2;
-}
-
-void m3d_camera::transform_and_project_to_screen(m3d_point &pointsrc, m3d_point &pointdst, SDL_Point &pix)
+void m3d_camera::projection(m3d_point &pointsrc, m3d_point &pointdst)
 {
 	transform.transform(pointsrc, pointdst);
 	frustum.transform(pointdst, pointdst);
-	pointdst.myvector[X_C] /= pointdst.myvector[T_C];
-	pointdst.myvector[Y_C] /= pointdst.myvector[T_C];
-	pointdst.myvector[Z_C] /= pointdst.myvector[T_C];
-	project_to_screen(pointdst, pix);
+	pointdst[X_C] /= pointdst[T_C];
+	pointdst[Y_C] /= pointdst[T_C];
+	pointdst[Z_C] /= pointdst[T_C];
+}
+
+void m3d_camera::projection(m3d_vector &vecsrc, m3d_vector &vectdst)
+{
+	transform.transform(vecsrc, vectdst);
+	frustum.transform(vectdst, vectdst);
+}
+
+void m3d_camera::to_screen(m3d_point &point, SDL_Point &pix)
+{
+	pix.x = lroundf((point[X_C] + 1.0f) * screen_resolution.x) / 2;
+	pix.y = lroundf((-point[Y_C] + 1.0f) * screen_resolution.y) / 2;
+}
+
+void m3d_camera::projection_to_screen(m3d_point &pointsrc, m3d_point &pointdst, SDL_Point &pix)
+{
+	transform.transform(pointsrc, pointdst);
+	frustum.transform(pointdst, pointdst);
+	pointdst[X_C] /= pointdst[T_C];
+	pointdst[Y_C] /= pointdst[T_C];
+	pointdst[Z_C] /= pointdst[T_C];
+	to_screen(pointdst, pix);
 }
 
 bool m3d_camera::is_visible(m3d_point &point, m3d_vector &normal)
