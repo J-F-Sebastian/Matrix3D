@@ -62,7 +62,7 @@ void m3d_world::sort(list<m3d_render_object *> &_objects_list)
 
 	for (auto itro : _objects_list)
 	{
-		camera.transform_to_viewpoint(itro->center, temp);
+		camera.projection(itro->center, temp);
 		itro->z_sorting = temp.myvector[Z_C];
 	}
 	_objects_list.sort(zsortobjects);
