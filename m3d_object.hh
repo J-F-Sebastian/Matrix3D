@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <bitset>
+#include <SDL.h>
 
 #include "m3d_vertex.hh"
 #include "m3d_color.hh"
@@ -19,9 +20,9 @@
  *
  * Example:
  *
- *  m3d_point triangle_array[] = {{1,2,3,0},    --> Point 0
- *                                {4,5,6,0},    --> Point 1
- *                                {7,6,9,0}};   --> Point 2
+ *  m3d_point triangle_array[] = {{1,2,3,1},    --> Point 0
+ *                                {4,5,6,1},    --> Point 1
+ *                                {7,6,9,1}};   --> Point 2
  *
  *  m3d_input_trimesh triangle_triangle = {{0,1,2}};
  */
@@ -49,8 +50,18 @@ public:
 
 	void rotate(m3d_matrix &rotation);
 
+	/*
+	 * Indexes inside a mesh of the 3 vertexes composing the triangle
+	 */
 	uint32_t index[3];
+	/*
+	 * The normal to the triangle surface in world coordinates
+	 */
 	m3d_vector normal;
+	/*
+	 * The normal to the triangle surface in projected homogeneous coordinates
+	 */
+	m3d_vector prjnormal;
 };
 
 class m3d_object
@@ -99,8 +110,11 @@ public:
 
 	void print(void);
 
-	// vertices are always in object coordinates, referring to a center in [0,0,0]
-	// vertices stores vectors to vertices and their normals
+	/*
+	 * Vertices refer to the world center in [0,0,0] when built.
+	 * Vertices stores vectors to vertices and their normals
+	 * in both world and projected coordinates.
+	 */
 	std::vector<m3d_vertex> vertices;
 	// mesh stores triangles and their normals
 	std::vector<m3d_triangle> mesh;
@@ -134,7 +148,7 @@ public:
 	/** Copy constructor
 	 *  \param other Object to copy from
 	 */
-	m3d_render_object(const m3d_render_object &other) : m3d_object(other), color(other.color), flags(0), z_sorting(0.0f) {};
+	m3d_render_object(const m3d_render_object &other) : m3d_object(other), z_sorting(0.0f), color(other.color), flags(0) {};
 
 	// creates an object starting from a m3d_trimesh array.
 	// vertices points to an array of m3d_point structs, describing the geometry of all
@@ -150,13 +164,27 @@ public:
 		   const uint32_t meshnum,
 		   m3d_color &_color);
 
+	void project(m3d_camera &camera);
+
 	void print(void);
 
-	m3d_color color;
-
-	unsigned flags;
-	// This is a convenience for sorting
+	/*
+	 * This is a convenience for sorting, it is a copy of the Z value of the object center
+	 * in homogeneous clip space.
+	 */
 	float z_sorting;
+	/*
+	 * Visible triangles as a bitset
+	 */
+	std::bitset<M3D_MAX_TRIANGLES> trivisible;
+	/*
+	 * Visible vertices as a bitset
+	 */
+	std::bitset<M3D_MAX_VERTICES> vtxvisible;
+	// Object color
+	m3d_color color;
+	// visible or changed flags
+	unsigned flags;
 };
 
 #endif // M3D_OBJECT_H

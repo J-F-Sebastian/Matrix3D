@@ -5,6 +5,7 @@
 #include <errno.h>
 
 #include "m3d_object.hh"
+#include "m3d_illum.hh"
 
 using namespace std;
 
@@ -124,36 +125,28 @@ void m3d_object::print()
 	ostringstream tmp;
 	unsigned i;
 
-	cout << "Object" << endl;
+	cout << "* Object" << endl
+	     << "  Vertices" << endl;
 	i = 0;
 	for (auto &it : vertices)
 	{
-		if (vertex_visible[i++])
-		{
-			cout << " V, ";
-		}
-		else
-		{
-			cout << "    ";
-		}
 		it.print();
 	}
-	cout << "Center ---> ";
-	center.print();
-	cout << "Triangle Mesh" << endl;
+	cout << "  Triangle Mesh" << endl;
 	i = 0;
 	for (auto &it : mesh)
 	{
 		tmp << "(" << it.index[0] << "," << it.index[1] << "," << it.index[2] << ") ,";
-		if (triangle_visible[i++])
-		{
-			tmp << " V,";
-		}
-		tmp << " Normal ---> ";
+		tmp << "  Normal ---> ";
 		cout << tmp.str();
 		tmp.str("");
 		it.normal.print();
 	}
+	cout << endl;
+	cout << "  Center    ---> ";
+	center.print();
+	cout << "  Direction ---> ";
+	direction.print();
 	cout << endl;
 #endif
 }
@@ -231,15 +224,15 @@ int m3d_render_object::create(struct m3d_input_point *_vertices,
 		a = vertices.at(it.index[1]).position;
 		a.subtract(vertices.at(it.index[0]).position);
 		b = vertices.at(it.index[2]).position;
-		b.subtract(vertices.at(_mesh->index[0]).position);
+		b.subtract(vertices.at(it.index[0]).position);
 		a.cross_product(b);
 
 		/*
 		 * Add surface normal to vertices' normals
 		 */
-		vertices.at(it.index[0]).normal.add(it.normal);
-		vertices.at(it.index[1]).normal.add(it.normal);
-		vertices.at(it.index[2]).normal.add(it.normal);
+		vertices.at(it.index[0]).normal.add(a);
+		vertices.at(it.index[1]).normal.add(a);
+		vertices.at(it.index[2]).normal.add(a);
 
 		a.normalize();
 		it.normal = a;
@@ -256,11 +249,81 @@ int m3d_render_object::create(struct m3d_input_point *_vertices,
 	return (0);
 };
 
+void m3d_render_object::project(m3d_camera &camera)
+{
+	m3d_point temp;
+	for (auto &it : vertices)
+	{
+		temp = it.position;
+		temp.add(center);
+		camera.projection_to_screen(temp, it.prjposition, it.scrposition);
+		camera.to_camera(it.normal, it.camnormal);
+	}
+
+	unsigned i = 0;
+	int xa, ya, xb, yb;
+	vtxvisible.reset();
+	for (auto &it : mesh)
+	{
+		camera.projection(it.normal, it.prjnormal);
+		/*
+		 * Compute the integer vectors as in create() but using the projected
+		 * discrete coordinates.
+		 * We avoid multiplication with camera vector, and compute the Z component
+		 * of the vector product of the normal to the projected discrete surface.
+		 * The result use homogeneus coordinates, so positive Z means the surface
+		 * is facing away from us, i.e. it is invisible.
+		 */
+		xa = vertices.at(it.index[1]).scrposition.x - vertices.at(it.index[0]).scrposition.x;
+		ya = vertices.at(it.index[1]).scrposition.y - vertices.at(it.index[0]).scrposition.y;
+		xb = vertices.at(it.index[2]).scrposition.x - vertices.at(it.index[0]).scrposition.x;
+		yb = vertices.at(it.index[2]).scrposition.y - vertices.at(it.index[0]).scrposition.y;
+
+		trivisible[i] = (xa * yb - ya * xb > 0) ? false : true;
+		if (trivisible[i++])
+		{
+			vtxvisible[it.index[0]] = true;
+			vtxvisible[it.index[1]] = true;
+			vtxvisible[it.index[2]] = true;
+		}
+	}
+
+	camera.projection(center, temp);
+	z_sorting = temp.myvector[Z_C];
+}
+
 void m3d_render_object::print()
 {
 #ifdef DEBUG
-	cout << "Render Object" << endl;
-	m3d_object::print();
+	ostringstream tmp;
+	unsigned i;
+
+	cout << "* Render Object" << endl;
+	i = 0;
+	for (auto &it : vertices)
+	{
+		it.print();
+	}
+	cout << "  Triangle Mesh" << endl;
+	i = 0;
+	for (auto &it : mesh)
+	{
+		tmp << "(" << it.index[0] << "," << it.index[1] << "," << it.index[2] << ") ,";
+		if (trivisible[i++])
+		{
+			tmp << " V,";
+		}
+		tmp << " Normal ---> ";
+		cout << tmp.str();
+		tmp.str("");
+		it.normal.print();
+	}
+	cout << endl;
+	cout << "  Center    ---> ";
+	center.print();
+	cout << "  Direction ---> ";
+	direction.print();
+	cout << "  Color     ---> ";
 	color.print();
 	cout << endl;
 #endif
