@@ -57,21 +57,12 @@ public:
 		mycolor.color = other.mycolor.color;
 	}
 
-	m3d_color operator*(const m3d_color &other)
+	friend m3d_color operator*(m3d_color some, const m3d_color &other)
 	{
-		unsigned tempc;
-
-		m3d_color temp(*this);
-		tempc = temp.mycolor.channels[R_CHANNEL] * other.mycolor.channels[R_CHANNEL];
-		tempc >>= 8;
-		temp.mycolor.channels[R_CHANNEL] = (uint8_t)tempc;
-		tempc = temp.mycolor.channels[G_CHANNEL] * other.mycolor.channels[G_CHANNEL];
-		tempc >>= 8;
-		temp.mycolor.channels[G_CHANNEL] = (uint8_t)tempc;
-		tempc = temp.mycolor.channels[B_CHANNEL] * other.mycolor.channels[B_CHANNEL];
-		tempc >>= 8;
-		temp.mycolor.channels[B_CHANNEL] = (uint8_t)tempc;
-		return temp;
+		some.mycolor.channels[m3d_color::R_CHANNEL] = (some.mycolor.channels[m3d_color::R_CHANNEL] * other.mycolor.channels[m3d_color::R_CHANNEL]) >> 8;
+		some.mycolor.channels[m3d_color::G_CHANNEL] = (some.mycolor.channels[m3d_color::G_CHANNEL] * other.mycolor.channels[m3d_color::G_CHANNEL]) >> 8;
+		some.mycolor.channels[m3d_color::B_CHANNEL] = (some.mycolor.channels[m3d_color::B_CHANNEL] * other.mycolor.channels[m3d_color::B_CHANNEL]) >> 8;
+		return some;
 	}
 
 	/*
