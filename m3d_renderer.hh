@@ -6,19 +6,11 @@
 #include "m3d_display.hh"
 #include "m3d_world.hh"
 #include "m3d_zbuffer.hh"
+#include "m3d_illum.hh"
 
 class m3d_renderer
 {
 public:
-	struct m3d_renderer_data
-	{
-		m3d_point vertex;
-		m3d_vector normal;
-		SDL_Point toscreen;
-		m3d_color Kspec, Kdiff;
-		float specint, diffint;
-	};
-
 	/** Default constructor */
 	m3d_renderer() : display(nullptr) {};
 	m3d_renderer(m3d_display *disp);
@@ -47,7 +39,8 @@ protected:
 	 * The triangle is geometrically unchanged, its vertices are sorted in descending order
 	 * (top of screen to bottom of screen).
 	 * */
-	void sort_triangle(struct m3d_renderer_data trianglep[]);
+	void sort_triangle(m3d_vertex *vtx[3]);
+	void sort_triangle(m3d_vertex *vtx[3], struct m3d_render_color *colors);
 
 	/*
 	 * Store scanlines into the scanline buffer, starting at position start inside the buffer.
@@ -75,13 +68,6 @@ protected:
 	 * the coordinates of the points composing the polygon and how they are sorted.
 	 */
 	void store_zscanlines(unsigned runlen, float val1, float val2, unsigned start = 0);
-	/*
-	 * Compute the light intensity for vertex vtx using the world description.
-	 * All coordinates are in the WORLD reference system.
-	 */
-	void diffuse_lighting(struct m3d_renderer_data &vtx, m3d_render_object &obj, m3d_world &world);
-
-	void specular_lighting(struct m3d_renderer_data &vtx, m3d_render_object &obj, m3d_world &world);
 
 	uint32_t *get_video_buffer(int16_t x0, int16_t y0);
 
@@ -114,7 +100,7 @@ public:
 	virtual void render(m3d_world &world);
 
 private:
-	void triangle_fill_flat(struct m3d_renderer_data vtx[], int16_t *runlen);
+	void triangle_fill_flat(m3d_vertex *vtx[], int16_t *runlen, m3d_color &color);
 };
 
 class m3d_renderer_flatf : public m3d_renderer
@@ -130,7 +116,7 @@ public:
 	virtual void render(m3d_world &world);
 
 private:
-	void triangle_fill_flat(struct m3d_renderer_data vtx[]);
+	void triangle_fill_flat(m3d_vertex *vtx[], m3d_color &color);
 };
 
 // Perspective-correct shading renderer
@@ -149,10 +135,10 @@ public:
 protected:
 	// The scanline light intensity buffer
 	float *iscanline;
+	struct m3d_render_color colors[3];
 
 	void store_iscanlines(unsigned runlen, float z1, float z2, float val1, float val2, unsigned start = 0);
-	virtual void triangle_fill_shaded(struct m3d_renderer_data vtx[],
-					  m3d_world &world);
+	virtual void triangle_fill_shaded(m3d_vertex *vtx[], m3d_world &world);
 };
 
 // Gouraud shading renderer
@@ -171,8 +157,7 @@ protected:
 	uint32_t *iscanline;
 
 	void store_iscanlines(unsigned runlen, m3d_color &val1, m3d_color &val2, unsigned start = 0);
-	virtual void triangle_fill_shaded(struct m3d_renderer_data vtx[],
-					  m3d_world &world);
+	virtual void triangle_fill_shaded(m3d_vertex *vtx[], m3d_world &world);
 };
 
 // Phong shading renderer
@@ -187,8 +172,7 @@ public:
 	virtual ~m3d_renderer_shaded_phong() {};
 
 protected:
-	virtual void triangle_fill_shaded(struct m3d_renderer_data vtx[],
-					  m3d_world &world);
+	virtual void triangle_fill_shaded(m3d_vertex *vtx[], m3d_world &world);
 };
 
 #endif // M3D_RENDERER_H
