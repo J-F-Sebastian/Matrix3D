@@ -21,15 +21,15 @@ MYOBJDIR = matrix3d
 
 MYOBJS = $(MYOBJDIR)\m3d_display.obj $(MYOBJDIR)\m3d_world.obj $(MYOBJDIR)\m3d_vertex.obj $(MYOBJDIR)\m3d_renderer.obj $(MYOBJDIR)\m3d_object.obj
 MYOBJS = $(MYOBJS) $(MYOBJDIR)\m3d_math_vector.obj $(MYOBJDIR)\m3d_math_point.obj $(MYOBJDIR)\m3d_math_matrix.obj $(MYOBJDIR)\m3d_math_axis.obj
-MYOBJS = $(MYOBJS) $(MYOBJDIR)\m3d_light_source.obj $(MYOBJDIR)\m3d_color.obj
-MYOBJS = $(MYOBJS) $(MYOBJDIR)\m3d_camera.obj $(MYOBJDIR)\m3d_interp.obj $(MYOBJDIR)\testmain.obj
+MYOBJS = $(MYOBJS) $(MYOBJDIR)\m3d_light_source.obj $(MYOBJDIR)\m3d_color.obj $(MYOBJDIR)\m3d_illum.obj
+MYOBJS = $(MYOBJS) $(MYOBJDIR)\m3d_camera.obj $(MYOBJDIR)\m3d_interp.obj $(MYOBJDIR)\main.obj
 
-CPPFLAGS = /Oi /favor:blend /W4 /GA /std:c++20 /EHcs /MP4 /c
+CPPFLAGS = /arch:AVX /W4 /GA /std:c++20 /EHcs /MP4 /c
 
 !ifdef DEBUG
-CPPFLAGS = $(CPPFLAGS) /Zi /O1
+CPPFLAGS = $(CPPFLAGS) /Zi /Od
 !else
-CPPFLAGS = $(CPPFLAGS) /O2 /arch:AVX
+CPPFLAGS = $(CPPFLAGS) /O2
 !endif
 
 CPPFLAGS = $(CPPFLAGS) /I$(MYLIBSDIR)\SDL2-32\include\SDL2
@@ -42,10 +42,10 @@ CPPFLAGS = $(CPPFLAGS) /Fematrix3d.exe
 !endif
 
 !ifdef DEBUG
-LNFLAGS = /Zf /Zi /favor:blend /GA /MTd
+LNFLAGS = /Zf /Zi /GA /MTd
 LNFLAGS = $(LNFLAGS) /Fdmatrix3ddbg.pdb /Fematrix3ddbg.exe
 !else
-LNFLAGS = /favor:blend /GA /MT
+LNFLAGS = /GA /MT
 LNFLAGS = $(LNFLAGS) /Fematrix3d.exe
 !endif
 
