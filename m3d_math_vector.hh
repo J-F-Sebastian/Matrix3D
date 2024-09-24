@@ -76,6 +76,16 @@ public:
                 myvector[T_C] = 0.0f;
         }
 
+        float &operator[](int idx)
+        {
+                return myvector[idx];
+        }
+
+        const float &operator[](int idx) const
+        {
+                return myvector[idx];
+        }
+
         friend m3d_vector operator+(const m3d_vector &veca, const m3d_vector &vecb)
         {
                 m3d_vector ret(veca);
