@@ -1,28 +1,39 @@
 #ifndef M3D_VERTEX_H
 #define M3D_VERTEX_H
 
+#include <SDL.h>
+
 #include "m3d_math.hh"
 
 class m3d_vertex
 {
 public:
-	/** Default constructor */
-	m3d_vertex() : position(), normal(){};
-	/** Default destructor */
-	~m3d_vertex(){};
-	/** Non-default constructor */
-	m3d_vertex(const float coords[]) : position(coords), normal(){};
-	/** Copy constructor
-	 *  \param other Object to copy from
-	 */
+	m3d_vertex() : position(), normal() {};
+	~m3d_vertex() {};
+	m3d_vertex(const float coords[]) : position(coords) {};
 	m3d_vertex(const m3d_vertex &other);
-	/** Access position
-	 * \return The current value of position
-	 */
 	void print(void);
 
-	m3d_point position; //!< Member variable "position"
-	m3d_vector normal;  //!< Member variable "normal"
+	/*
+	 * Vertex position in world coordinates
+	 */
+	m3d_point position;
+	/*
+	 * Vertex normal in world coordinates
+	 */
+	m3d_vector normal;
+	/*
+	 * Vertex position in projected homogeneous coordinates
+	 */
+	m3d_point prjposition;
+	/*
+	 * Vertex normal in camera coordinates
+	 */
+	m3d_vector camnormal;
+	/*
+	 * Screen coordinates for prjposition
+	 */
+	SDL_Point scrposition;
 };
 
 #endif // M3D_VERTEX_H
