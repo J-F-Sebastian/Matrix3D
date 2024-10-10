@@ -4,14 +4,16 @@
 #include "m3d_math_vector.hh"
 
 /*
- * A matrix in column,raw order
+ * A matrix in raw,column order
  * The default matrix is the Identity matrix
+ *
+ * [row][column] -> first matrix index selects the row, the second selects the column
  */
 class m3d_matrix
 {
 public:
         m3d_matrix();
-        m3d_matrix(const float values[][m3d_vector_size]);
+        explicit m3d_matrix(const float values[][m3d_vector_size]);
         m3d_matrix(const m3d_matrix &mat);
 
         void operator=(const m3d_matrix &other);
@@ -132,6 +134,12 @@ public:
         explicit m3d_matrix_rotation(float pitch, float yaw, float roll);
 };
 
+class m3d_matrix_transform : public m3d_matrix_rotation
+{
+public:
+        explicit m3d_matrix_transform(float pitch, float yaw, float roll, m3d_vector &pos);
+};
+
 class m3d_matrix_identity : public m3d_matrix
 {
 public:
@@ -142,7 +150,7 @@ class m3d_matrix_camera : public m3d_matrix
 {
 public:
         m3d_matrix_camera() : m3d_matrix() {}
-        m3d_matrix_camera(const m3d_input_point &campos, const m3d_input_point &lookat);
+        explicit m3d_matrix_camera(const m3d_input_point &campos, const m3d_input_point &lookat);
 };
 
 /*

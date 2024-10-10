@@ -10,10 +10,10 @@
  * ALL VALUES ARE FLOAT (single precision)
  *
  * vector format: {x - y - z - t}
- * matrix format: /x - x - x - x\
- *                |y - y - y - y|
- *                |z - z - z - z|
- *                \t - t - t - t/
+ * matrix format: /x - y - z - t\
+ *                |x - y - z - t|
+ *                |x - y - z - t|
+ *                \x - y - z - t/
  *
  * Roll is a rotation around z axis
  * Yaw is a rotation around y axis

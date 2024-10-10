@@ -13,9 +13,6 @@ using namespace std;
 
 /*
  * Utility function to multiply a row and a column in a matrix.
- * NOTE: Remember the order used in this code, rows carry homogeneus
- * coordinates (all x, all y, all z, all t) while columns carry
- * the vectors composing the matrix.
  */
 static inline float row_by_col(const float a[][m3d_vector_size],
 			       const float b[][m3d_vector_size],
@@ -78,10 +75,10 @@ void m3d_matrix::insert(const m3d_vector &vector, unsigned row)
 {
 	if ((X_C == row) || (Y_C == row) || (Z_C == row) || (T_C == row))
 	{
-		mymatrix[X_C][row] = vector.myvector[X_C];
-		mymatrix[Y_C][row] = vector.myvector[Y_C];
-		mymatrix[Z_C][row] = vector.myvector[Z_C];
-		mymatrix[T_C][row] = vector.myvector[T_C];
+		mymatrix[row][X_C] = vector.myvector[X_C];
+		mymatrix[row][Y_C] = vector.myvector[Y_C];
+		mymatrix[row][Z_C] = vector.myvector[Z_C];
+		mymatrix[row][T_C] = vector.myvector[T_C];
 	}
 }
 
@@ -111,7 +108,7 @@ void m3d_matrix::multiply(m3d_vector &vector)
 		temp[i] = 0.0f;
 		for (j = 0; j < m3d_vector_size; j++)
 		{
-			temp[i] += mymatrix[j][i] * vector.myvector[j];
+			temp[i] += mymatrix[i][j] * vector.myvector[j];
 		}
 	}
 
@@ -137,7 +134,7 @@ void m3d_matrix::transpose()
 void m3d_matrix::translate(m3d_vector &vector)
 {
 	for (unsigned i = 0; i < m3d_vector_size; i++)
-		mymatrix[T_C][i] += vector.myvector[i];
+		mymatrix[i][T_C] += vector[i];
 }
 
 /*
@@ -147,11 +144,11 @@ void m3d_matrix::rotate(m3d_vector &veca, m3d_vector &out)
 {
 	m3d_vector vecb;
 
-	for (unsigned i = 0; i < T_C; i++)
+	for (unsigned i = 0; i < m3d_vector_size; i++)
 	{
-		vecb.myvector[i] = veca.myvector[X_C] * mymatrix[X_C][i] +
-				   veca.myvector[Y_C] * mymatrix[Y_C][i] +
-				   veca.myvector[Z_C] * mymatrix[Z_C][i];
+		vecb.myvector[i] = veca.myvector[X_C] * mymatrix[i][X_C] +
+				   veca.myvector[Y_C] * mymatrix[i][Y_C] +
+				   veca.myvector[Z_C] * mymatrix[i][Z_C];
 	}
 	vecb.myvector[T_C] = veca.myvector[T_C];
 	out = vecb;
@@ -163,16 +160,17 @@ void m3d_matrix::rotate(m3d_vector &veca, m3d_vector &out)
  * 1) rotation and motion of a point
  * 2) rotation of a vector
  *
- * the matrix need to be column first (columns carry the vectors)
+ * The matrix is composed by a 3x3 rotation matrix, a translation vector,
+ * and an invariant vector
  *
- *   Xr1 Xr2 Xr3 0
- *   Yr1 Yr2 Yr3 0
- *   Zr1 Zr2 Zr3 0
- *   Xt   Yt  Zt 1
+ *   Xr1 Yr1 Zr1 Xt
+ *   Xr2 Yr2 Zr2 Yt
+ *   Xr3 Yr3 Zr3 Zt
+ *   0   0   0   1
  *
  * A vector has the T value set to 0.0f, so the last row of values does not
  * affect the transformation, i.e. a vector cannot be translated but can only be rotated.
- * A point has the T value set to 1.0f, so the last row of values is effectively
+ * A point has the T value set to 1.0f, so the last column of values is effectively
  * added to the rotation, while the output of the T value of the point is 1.0f.
  *
  * Examples
@@ -193,10 +191,10 @@ void m3d_matrix::transform(m3d_vector &veca, m3d_vector &out)
 
 	for (unsigned i = 0; i < m3d_vector_size; i++)
 	{
-		temp.myvector[i] = veca.myvector[X_C] * mymatrix[X_C][i] +
-				   veca.myvector[Y_C] * mymatrix[Y_C][i] +
-				   veca.myvector[Z_C] * mymatrix[Z_C][i] +
-				   veca.myvector[T_C] * mymatrix[T_C][i];
+		temp[i] = veca[X_C] * mymatrix[i][X_C] +
+			  veca[Y_C] * mymatrix[i][Y_C] +
+			  veca[Z_C] * mymatrix[i][Z_C] +
+			  veca[T_C] * mymatrix[i][T_C];
 	}
 	out = temp;
 }
@@ -216,13 +214,12 @@ void m3d_matrix::print(const float matrix[][m3d_vector_size])
 	temp.setf(ios_base::showpoint | ios_base::showpos);
 	temp.precision(6);
 
-	temp << "+-" << setw(51) << "-+" << endl;
-	temp << "|X " << setw(10) << matrix[X_C][X_C] << " X " << setw(10) << matrix[X_C][Y_C] << " X " << setw(10) << matrix[X_C][Z_C] << " X " << setw(10) << matrix[X_C][T_C] << "|" << endl;
-	temp << "|Y " << setw(10) << matrix[Y_C][X_C] << " Y " << setw(10) << matrix[Y_C][Y_C] << " Y " << setw(10) << matrix[Y_C][Z_C] << " Y " << setw(10) << matrix[Y_C][T_C] << "|" << endl;
-	temp << "|Z " << setw(10) << matrix[Z_C][X_C] << " Z " << setw(10) << matrix[X_C][Y_C] << " Z " << setw(10) << matrix[Z_C][Z_C] << " Z " << setw(10) << matrix[Z_C][T_C] << "|" << endl;
-	temp << "|T " << setw(10) << matrix[T_C][X_C] << " T " << setw(10) << matrix[T_C][Y_C] << " T " << setw(10) << matrix[T_C][Z_C] << " T " << setw(10) << matrix[T_C][T_C] << "|" << endl;
+	temp << "+--" << setw(49) << "--+" << endl;
 
-	temp << "+-" << setw(51) << "-+" << endl;
+	for (unsigned i = 0; i < m3d_vector_size; i++)
+		temp << "|X " << setw(10) << matrix[i][X_C] << " X " << setw(10) << matrix[i][Y_C] << " X " << setw(10) << matrix[i][Z_C] << " X " << setw(10) << matrix[i][T_C] << "|" << endl;
+
+	temp << "+--" << setw(49) << "--+" << endl;
 	cout << temp.str();
 #else
 	(void)matrix;
@@ -254,8 +251,6 @@ m3d_matrix_roll::m3d_matrix_roll(float angle)
 	mymatrix[T_C][Y_C] = 0.0f;
 	mymatrix[T_C][Z_C] = 0.0f;
 	mymatrix[T_C][T_C] = 1.0f;
-
-	transpose();
 }
 
 /**********************************************************************************************/
@@ -283,8 +278,6 @@ m3d_matrix_pitch::m3d_matrix_pitch(float angle)
 	mymatrix[T_C][Y_C] = 0.0f;
 	mymatrix[T_C][Z_C] = 0.0f;
 	mymatrix[T_C][T_C] = 1.0f;
-
-	transpose();
 }
 
 /**********************************************************************************************/
@@ -312,95 +305,74 @@ m3d_matrix_yaw::m3d_matrix_yaw(float angle)
 	mymatrix[T_C][Y_C] = 0.0f;
 	mymatrix[T_C][Z_C] = 0.0f;
 	mymatrix[T_C][T_C] = 1.0f;
-
-	transpose();
 }
 
 /**********************************************************************************************/
 m3d_matrix_rotation::m3d_matrix_rotation(float pitch, float yaw, float roll) : m3d_matrix()
 {
-        m3d_matrix_roll rollm(roll);
-        m3d_matrix_pitch pitchm(pitch);
-        m3d_matrix_yaw yawm(yaw);
+	m3d_matrix_pitch pitchm(pitch);
+	m3d_matrix_yaw yawm(yaw);
+	m3d_matrix_roll rollm(roll);
 
-        multiply(yawm);
-        multiply(pitchm);
-        multiply(rollm);
+	yawm.multiply(pitchm);
+	rollm.multiply(yawm);
+	multiply(rollm);
 }
 
 /**********************************************************************************************/
-m3d_matrix_identity::m3d_matrix_identity() : m3d_matrix()
+m3d_matrix_transform::m3d_matrix_transform(float pitch, float yaw, float roll, m3d_vector &pos) : m3d_matrix_rotation(pitch, yaw, roll)
 {
+	mymatrix[X_C][T_C] = pos[X_C];
+	mymatrix[Y_C][T_C] = pos[Y_C];
+	mymatrix[Z_C][T_C] = pos[Z_C];
 }
 
 /**********************************************************************************************/
-m3d_matrix_camera::m3d_matrix_camera(const m3d_input_point &campos, const m3d_input_point &lookat)
+m3d_matrix_identity::m3d_matrix_identity() : m3d_matrix() {}
+
+/**********************************************************************************************/
+m3d_matrix_camera::m3d_matrix_camera(const m3d_input_point &campos, const m3d_input_point &lookat) : m3d_matrix()
 {
-	m3d_vector pos(campos);
-	m3d_vector tempz(lookat);
+	m3d_vector pos(lookat);
+	m3d_vector tempz(campos);
 
 	/*
-	 * Compute tempz as the vector running from the camera position
-	 * towards the looking point <at>.
-	 * The vector's direction is from <position> to <at>.
+	 * Compute tempz as the vector running from the looking point <at>
+	 * towards the camera position.
+	 * The vector direction is from <at> to <position>.
 	 */
 	tempz.subtract(pos);
 	tempz.normalize();
 
 	/*
-	 * Now compute the cross product between tempz and
-	 * the Y axis vector; since the final rotation is equivalent to
+	 * Now compute the cross product between the Y axis vector
+	 * and tempz; since the final rotation is equivalent to
 	 * a rotation around Y and another around X, the Y axis in the world
 	 * coordinates belongs to the YZ plane in the camera coordinates.
 	 * The result of the cross product is tempx.
 	 */
-	m3d_axis_y tempy_axis;
-	m3d_vector tempx(tempz);
-	tempx.cross_product(tempy_axis);
+	m3d_axis_y tempx;
+	tempx.cross_product(tempz);
 	tempx.normalize();
 
 	/*
 	 * Finally compute tempy.
 	 */
-	m3d_vector tempy(tempx);
-	tempy.cross_product(tempz);
+	m3d_vector tempy(tempz);
+	tempy.cross_product(tempx);
 	tempy.normalize();
 
-	/*
-	 * tempz is the resulting new z axis but directed towards the looking point.
-	 * We need the same axis reference (right-handed) used for other matrixes so
-	 * tempz is mirrored (camera z axis points from monitor to the viewer)
-	 * */
-	tempz.mirror();
+	insert(tempx, X_C);
+	insert(tempy, Y_C);
+	insert(tempz, Z_C);
 
-	mymatrix[X_C][X_C] = tempx.myvector[X_C];
-	mymatrix[X_C][Y_C] = tempx.myvector[Y_C];
-	mymatrix[X_C][Z_C] = tempx.myvector[Z_C];
-	mymatrix[X_C][T_C] = tempx.myvector[T_C];
+	m3d_vector translation(campos);
+	rotate(translation, translation);
+	translation.mirror();
 
-	mymatrix[Y_C][X_C] = tempy.myvector[X_C];
-	mymatrix[Y_C][Y_C] = tempy.myvector[Y_C];
-	mymatrix[Y_C][Z_C] = tempy.myvector[Z_C];
-	mymatrix[Y_C][T_C] = tempy.myvector[T_C];
-
-	mymatrix[Z_C][X_C] = tempz.myvector[X_C];
-	mymatrix[Z_C][Y_C] = tempz.myvector[Y_C];
-	mymatrix[Z_C][Z_C] = tempz.myvector[Z_C];
-	mymatrix[Z_C][T_C] = tempz.myvector[T_C];
-
-	mymatrix[T_C][X_C] = 0.0f;
-	mymatrix[T_C][Y_C] = 0.0f;
-	mymatrix[T_C][Z_C] = 0.0f;
-	mymatrix[T_C][T_C] = 1.0f;
-
-	transpose();
-	rotate(pos, pos);
-	pos.mirror();
-
-	mymatrix[T_C][X_C] = pos.myvector[X_C];
-	mymatrix[T_C][Y_C] = pos.myvector[Y_C];
-	mymatrix[T_C][Z_C] = pos.myvector[Z_C];
-	mymatrix[T_C][T_C] = pos.myvector[T_C];
+	mymatrix[X_C][T_C] = translation[X_C];
+	mymatrix[Y_C][T_C] = translation[Y_C];
+	mymatrix[Z_C][T_C] = translation[Z_C];
 }
 
 /**********************************************************************************************/
@@ -467,8 +439,6 @@ m3d_frustum::m3d_frustum(const float fowangle, const int xres, const int yres, c
 	mymatrix[T_C][Y_C] = 0.0f;
 	mymatrix[T_C][Z_C] = -1.0f;
 	mymatrix[T_C][T_C] = 0.0f;
-
-	transpose();
 }
 
 m3d_frustum::m3d_frustum(const float fowangle, const int xres, const int yres, const float near)
@@ -534,6 +504,4 @@ m3d_frustum::m3d_frustum(const float fowangle, const int xres, const int yres, c
 	mymatrix[T_C][Y_C] = 0.0f;
 	mymatrix[T_C][Z_C] = -1.0f;
 	mymatrix[T_C][T_C] = 0.0f;
-
-	transpose();
 }
