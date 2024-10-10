@@ -14,21 +14,21 @@ void m3d_illumination::diffuse_lighting(m3d_vertex &vtx, m3d_render_object &obj,
 {
         m3d_color temp[2];
         // Ambient light does not depend on position anyway...
-        float lightint = world.ambient_light.get_intensity(vtx.position);
+        float lightint = world.ambient_light.get_intensity(vtx.tposition);
         temp[0] = world.ambient_light.get_color();
         temp[0].brighten(lightint);
         out.diffint = lightint;
         lightint = 0.0f;
-        m3d_vector vtxworld(vtx.position);
-        vtxworld.add(obj.center);
+        m3d_vector vtxworld(vtx.tposition);
+        vtxworld.add(obj.tcenter);
         // Now we sum all diffuse contributions considering light position w.r.t. vtx position and the surface normal.
         for (auto lights : world.lights_list)
         {
-                m3d_vector L(lights->get_position());
+                m3d_vector L(lights->position);
                 L.subtract(vtxworld);
                 L.normalize();
-                float dot = L.dot_product(vtx.normal);
-                lightint += lights->get_intensity(vtx.position) * m3d_max(dot, 0.0f);
+                float dot = L.dot_product(vtx.tnormal);
+                lightint += lights->get_intensity(vtx.tposition) * m3d_max(dot, 0.0f);
         }
         temp[1] = obj.color;
         temp[1].brighten(lightint);

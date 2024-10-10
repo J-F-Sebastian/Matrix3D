@@ -48,7 +48,7 @@ public:
 	m3d_ambient_light(const m3d_color &color,
 			  const float src_intensity) : m3d_light_source(color, src_intensity) {}
 
-	virtual float get_intensity(const m3d_point &objpos) { return sintensity; }
+	virtual float get_intensity(const m3d_point & /*objpos*/) { return sintensity; }
 
 	virtual void print(void);
 };
@@ -80,14 +80,14 @@ public:
 							Kl(Kl),
 							Kq(Kq) {}
 
-	const m3d_point &get_position(void) const { return position; }
-
 	virtual float get_intensity(const m3d_point &objpos);
 
 	virtual void print(void);
 
-protected:
 	m3d_point position;
+	m3d_point tposition;
+
+protected:
 	// Constant, Linear and Quadratic attenuation constants
 	float Kc, Kl, Kq;
 };
@@ -119,7 +119,7 @@ public:
 			      const float Kq,
 			      const float intensity) : m3d_point_light_source(position, color, Kc, Kl, Kq, intensity), direction(lookat)
 	{
-		direction.subtract(get_position());
+		direction.subtract(position);
 		direction.normalize();
 	}
 
