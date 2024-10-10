@@ -37,6 +37,13 @@ public:
                 myvector[Z_C] = other.myvector[Z_C];
                 myvector[T_C] = other.myvector[T_C];
         }
+
+        friend m3d_point operator+(const m3d_point &veca, const m3d_point &vecb)
+        {
+                m3d_point ret(veca);
+                ret.add(vecb);
+                return ret; // return the result by value (uses move constructor)
+        }
 };
 
 #endif
