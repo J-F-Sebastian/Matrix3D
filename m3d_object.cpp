@@ -13,9 +13,9 @@ using namespace std;
 /****** class m3d_triangle ******/
 /********************************/
 
-void m3d_triangle::rotate(m3d_matrix &rotation)
+void m3d_triangle::project(m3d_camera &camera)
 {
-	rotation.rotate(normal, normal);
+	camera.projection(normal, prjnormal);
 }
 
 /******************************/
@@ -82,33 +82,30 @@ int m3d_object::create(struct m3d_input_point *_vertices,
 	return (0);
 }
 
-/*
- * perform rolling of the object, rotating around z angle in degrees
- */
+// Z
 void m3d_object::roll(float angle)
 {
-	m3d_matrix temp = m3d_matrix_roll(angle);
-	update_object(temp);
+	rollangle += angle;
 	uptodate = false;
 }
 
-/*
- * perform yawing of the object, rotating around y angle in degrees
- */
+// Y
 void m3d_object::yaw(float angle)
 {
-	m3d_matrix temp = m3d_matrix_yaw(angle);
-	update_object(temp);
+	yawangle += angle;
 	uptodate = false;
 }
 
-/*
- * perform pitching of the object, rotating around x angle in degrees
- */
+// X
 void m3d_object::pitch(float angle)
 {
-	m3d_matrix temp = m3d_matrix_pitch(angle);
-	update_object(temp);
+	pitchangle += angle;
+	uptodate = false;
+}
+
+void m3d_object::set(const m3d_point &newposition)
+{
+	center = newposition;
 	uptodate = false;
 }
 
@@ -164,22 +161,29 @@ void m3d_object::compute_center()
 	center.myvector[T_C] = 1.0f;
 }
 
-void m3d_object::update_object(m3d_matrix &transform)
+void m3d_object::update_object()
 {
-	for (auto &it : vertices)
+	if (uptodate == false)
 	{
-		transform.rotate(it.position, it.position);
-		transform.rotate(it.normal, it.normal);
-	}
+		m3d_matrix_transform t(pitchangle, yawangle, rollangle, center);
 
-	/* update triangle surfaces' normals */
-	for (auto &it : mesh)
-	{
-		it.rotate(transform);
-	}
+		for (auto &it : vertices)
+		{
+			// m3d_point truepos = center + it.position;
+			t.transform(it.position, it.tposition);
+			t.rotate(it.normal, it.tnormal);
+		}
 
-	/* update object's direction */
-	/* MISSING */
+		/* update triangle surfaces' normals */
+		for (auto &it : mesh)
+		{
+			t.rotate(it.normal, it.tnormal);
+		}
+		/* update object's direction */
+
+		/* MISSING */
+		uptodate = true;
+	}
 }
 
 /*************************************/
@@ -252,12 +256,14 @@ int m3d_render_object::create(struct m3d_input_point *_vertices,
 void m3d_render_object::project(m3d_camera &camera)
 {
 	m3d_point temp;
+
+	update_object();
+
 	for (auto &it : vertices)
 	{
-		temp = it.position;
-		temp.add(center);
-		camera.projection_to_screen(temp, it.prjposition, it.scrposition);
-		camera.to_camera(it.normal, it.camnormal);
+		camera.projection_to_screen(it.tposition, it.prjposition, it.scrposition);
+		// FIXME you sure? Not homogeneous?
+		camera.to_camera(it.tnormal, it.prjnormal);
 	}
 
 	unsigned i = 0;
@@ -265,7 +271,7 @@ void m3d_render_object::project(m3d_camera &camera)
 	vtxvisible.reset();
 	for (auto &it : mesh)
 	{
-		camera.projection(it.normal, it.prjnormal);
+		camera.projection(it.tnormal, it.prjnormal);
 		/*
 		 * Compute the integer vectors as in create() but using the projected
 		 * discrete coordinates.
