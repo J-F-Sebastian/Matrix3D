@@ -15,23 +15,34 @@ public:
 	void print(void);
 
 	/*
-	 * Vertex position in world coordinates
+	 * Vertex position in object coordinates.
+	 * Values are computed referring to the object's center.
+	 * World coordinates can be computed by adding the object's center.
 	 */
 	m3d_point position;
 	/*
-	 * Vertex normal in world coordinates
+	 * Vertex normal in world coordinates.
+	 * Normalized vector (not positional).
 	 */
 	m3d_vector normal;
 	/*
-	 * Vertex position in projected homogeneous coordinates
+	 * Vertex position in world coordinates, transformed.
+	 */
+	m3d_point tposition;
+	/*
+	 * Vertex normal in world coordinates, transformed.
+	 */
+	m3d_vector tnormal;
+	/*
+	 * Vertex position in projected homogeneous coordinates.
 	 */
 	m3d_point prjposition;
 	/*
-	 * Vertex normal in camera coordinates
+	 * Vertex normal in projected homogeneous coordinates.
 	 */
-	m3d_vector camnormal;
+	m3d_point prjnormal;
 	/*
-	 * Screen coordinates for prjposition
+	 * Screen coordinates for prjposition.
 	 */
 	SDL_Point scrposition;
 };
