@@ -15,8 +15,13 @@ static inline float m3d_max(float a, float b)
 
 static inline m3d_color m3d_average_light(m3d_render_color n[])
 {
-    m3d_color temp[3] = {n[0].Kdiff, n[1].Kdiff, n[2].Kdiff};
+    m3d_color temp[3];
     m3d_color out;
+
+    temp[0] = n[0].Kamb + n[0].Kdiff;
+    temp[1] = n[1].Kamb + n[1].Kdiff;
+    temp[2] = n[2].Kamb + n[2].Kdiff;
+
     m3d_color::average_colors(temp, 3, out);
     return out;
 }
