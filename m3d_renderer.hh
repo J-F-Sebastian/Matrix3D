@@ -138,7 +138,7 @@ protected:
 	struct m3d_render_color colors[3];
 
 	void store_iscanlines(unsigned runlen, float z1, float z2, float val1, float val2, unsigned start = 0);
-	virtual void triangle_fill_shaded(m3d_vertex *vtx[], m3d_world &world);
+	virtual void triangle_fill_shaded(m3d_render_object &obj, m3d_vertex *vtx[], m3d_world &world);
 };
 
 // Gouraud shading renderer
@@ -157,7 +157,7 @@ protected:
 	uint32_t *iscanline;
 
 	void store_iscanlines(unsigned runlen, m3d_color &val1, m3d_color &val2, unsigned start = 0);
-	virtual void triangle_fill_shaded(m3d_vertex *vtx[], m3d_world &world);
+	virtual void triangle_fill_shaded(m3d_render_object &obj, m3d_vertex *vtx[], m3d_world &world);
 };
 
 // Phong shading renderer
@@ -171,8 +171,10 @@ public:
 	/** Default destructor */
 	virtual ~m3d_renderer_shaded_phong() {};
 
+	virtual void render(m3d_world &world);
+
 protected:
-	virtual void triangle_fill_shaded(m3d_vertex *vtx[], m3d_world &world);
+	virtual void triangle_fill_shaded(m3d_render_object &obj, m3d_vertex *vtx[], m3d_world &world);
 };
 
 #endif // M3D_RENDERER_H

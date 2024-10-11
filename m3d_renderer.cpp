@@ -678,7 +678,7 @@ void m3d_renderer_shaded::render(m3d_world &world)
 
                 sort_triangle(vtx, colors);
 
-                triangle_fill_shaded(vtx, world);
+                triangle_fill_shaded(*itro, vtx, world);
             }
         }
     }
@@ -693,7 +693,7 @@ void m3d_renderer_shaded::store_iscanlines(unsigned runlen, float z1, float z2, 
     run.valuearray(iscanline + start);
 }
 
-void m3d_renderer_shaded::triangle_fill_shaded(m3d_vertex *vtx[], m3d_world &world)
+void m3d_renderer_shaded::triangle_fill_shaded(m3d_render_object &obj, m3d_vertex *vtx[], m3d_world &world)
 {
     uint32_t *output;
     float *outz;
@@ -703,9 +703,9 @@ void m3d_renderer_shaded::triangle_fill_shaded(m3d_vertex *vtx[], m3d_world &wor
     float p3 = (float)vtx[0]->scrposition.x + 0.5f;
     float p4 = (float)vtx[1]->scrposition.x + 0.5f;
     float p5 = (float)vtx[2]->scrposition.x + 0.5f;
-    float i0 = colors[0].diffint;
-    float i1 = colors[1].diffint;
-    float i2 = colors[2].diffint;
+    float i0 = colors[0].ambint + colors[0].diffint;
+    float i1 = colors[1].ambint + colors[1].diffint;
+    float i2 = colors[2].ambint + colors[2].diffint;
     unsigned runlen0 = vtx[2]->scrposition.y - vtx[0]->scrposition.y + 1;
     unsigned runlen1 = vtx[1]->scrposition.y - vtx[0]->scrposition.y + 1;
     unsigned runlen2 = vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1;
@@ -796,7 +796,7 @@ void m3d_renderer_shaded_gouraud::store_iscanlines(unsigned runlen, m3d_color &v
     run.valuearray(iscanline + start);
 }
 
-void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_vertex *vtx[], m3d_world &world)
+void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m3d_vertex *vtx[], m3d_world &world)
 {
     uint32_t *output;
     float *outz;
@@ -809,6 +809,9 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_vertex *vtx[], m3d_wo
     unsigned runlen0 = vtx[2]->scrposition.y - vtx[0]->scrposition.y + 1;
     unsigned runlen1 = vtx[1]->scrposition.y - vtx[0]->scrposition.y + 1;
     unsigned runlen2 = vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1;
+    m3d_color c0 = colors[0].Kamb + colors[0].Kdiff;
+    m3d_color c1 = colors[1].Kamb + colors[1].Kdiff;
+    m3d_color c2 = colors[2].Kamb + colors[2].Kdiff;
     int fillrunlen;
     int16_t y = (int16_t)vtx[0]->scrposition.y;
     float *lscanline, *rscanline;
@@ -833,9 +836,9 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_vertex *vtx[], m3d_wo
         store_zscanlines(runlen0, p0, p2);
         store_zscanlines(runlen1, p0, p1, runlen0);
         store_zscanlines(runlen2, p1, p2, runlen0 + runlen1 - 1);
-        store_iscanlines(runlen0, colors[0].Kdiff, colors[2].Kdiff);
-        store_iscanlines(runlen1, colors[0].Kdiff, colors[1].Kdiff, runlen0);
-        store_iscanlines(runlen2, colors[1].Kdiff, colors[2].Kdiff, runlen0 + runlen1 - 1);
+        store_iscanlines(runlen0, c0, c2);
+        store_iscanlines(runlen1, c0, c1, runlen0);
+        store_iscanlines(runlen2, c1, c2, runlen0 + runlen1 - 1);
     }
     else
     {
@@ -845,9 +848,9 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_vertex *vtx[], m3d_wo
         store_zscanlines(runlen1, p0, p1);
         store_zscanlines(runlen2, p1, p2, runlen1 - 1);
         store_zscanlines(runlen0, p0, p2, runlen1 + runlen2 - 1);
-        store_iscanlines(runlen1, colors[0].Kdiff, colors[1].Kdiff);
-        store_iscanlines(runlen2, colors[1].Kdiff, colors[2].Kdiff, runlen1 - 1);
-        store_iscanlines(runlen0, colors[0].Kdiff, colors[2].Kdiff, runlen1 + runlen2 - 1);
+        store_iscanlines(runlen1, c0, c1);
+        store_iscanlines(runlen2, c1, c2, runlen1 - 1);
+        store_iscanlines(runlen0, c0, c2, runlen1 + runlen2 - 1);
     }
 
     lscanline = fscanline;
@@ -893,7 +896,40 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_vertex *vtx[], m3d_wo
  * PHONG SHADING RENDERER
  */
 
-void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_vertex *vtx[], m3d_world &world)
+void m3d_renderer_shaded_phong::render(m3d_world &world)
+{
+    unsigned i, j;
+    m3d_vertex *vtx[3];
+
+    compute_visible_list_and_sort(world);
+
+    // Fill the surface black
+    display->clear_buffer();
+
+    for (auto itro : vislist)
+    {
+        i = 0;
+        for (auto &triangle : itro->mesh)
+        {
+            if (itro->trivisible[i++])
+            {
+                for (j = 0; j < 3; j++)
+                {
+                    vtx[j] = &itro->vertices.at(triangle.index[j]);
+                }
+
+                sort_triangle(vtx, colors);
+
+                triangle_fill_shaded(*itro, vtx, world);
+            }
+        }
+    }
+
+    // Present the rendered lines
+    display->show_buffer();
+}
+
+void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d_vertex *vtx[], m3d_world &world)
 {
     uint32_t *output;
     float *outz;
@@ -944,14 +980,15 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_vertex *vtx[], m3d_worl
     rscanline = fscanline + runlen0;
     lzscanline = zscanline;
     rzscanline = zscanline + runlen0;
-
     while (runlen0--)
     {
         fillrunlen = lroundf(*rscanline - *lscanline) + 1;
         if (fillrunlen)
         {
             m3d_interpolation_float sl(fillrunlen, *lzscanline, *rzscanline);
-
+            // FIXME bitch vertex cannot be used
+            m3d_illum::inst().ambient_lighting(*vtx[0], obj, world, colors[0]);
+            m3d_illum::inst().diffuse_lighting(*vtx[0], obj, world, colors[0]);
             output = display->get_video_buffer((int16_t)truncf(*lscanline), y);
             outz = zbuffer.get_zbuffer((int16_t)truncf(*lscanline), y);
             while (sl.finished() == false)
