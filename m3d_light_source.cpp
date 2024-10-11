@@ -30,7 +30,7 @@ float m3d_point_light_source::get_intensity(const m3d_point &objpos)
 {
 	// compute vector from object position to light source to compute distance
 	m3d_vector L(objpos);
-	L.subtract(position);
+	L.subtract(tposition);
 	// The distance from the object (scalar)
 	float d = L.module();
 	return (sintensity / (Kc + Kl * d + Kq * d * d));
@@ -61,15 +61,15 @@ void m3d_point_light_source::print()
  */
 float m3d_spot_light_source::get_intensity(const m3d_point &objpos)
 {
-	// compute vector from position to light source
-	m3d_vector L(position);
-	L.subtract(objpos);
+	// compute vector from object position to light source to compute distance
+	m3d_vector L(objpos);
+	L.subtract(tposition);
 	// distance (scalar)
 	float d = L.module();
 	L.normalize();
 	// compute -RdotL which is the dot product of the normalized position vector
 	// of the object and the spotlight direction.
-	float minusRdotL = m3d_max(-L.dot_product(direction), 0.0f);
+	float minusRdotL = m3d_max(L.dot_product(direction), 0.0f);
 	if (minusRdotL != 0.0f)
 	{
 		// We hardcoded a value of p = 8 but this should be dynamic....
