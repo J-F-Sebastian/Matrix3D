@@ -47,7 +47,12 @@ public:
 	// the vector going from camera to point itself in world coordinates.
 	bool is_visible(m3d_point &point, m3d_vector &normal);
 
-	const m3d_point &get_position(void) { return position; }
+	void get_position(m3d_point &pos) { pos = position; }
+
+	void get_tposition(m3d_point &tposition)
+	{
+		to_camera(position, tposition);
+	}
 
 private:
 	// Position of the camera in world coordinates
