@@ -6,13 +6,13 @@
 struct m3d_render_color
 {
         /*
-         * The specular and diffuse colors computed for this vertex
+         * The ambient, specular and diffuse colors computed for this vertex
          */
-        m3d_color Kspec, Kdiff;
+        m3d_color Kamb, Kspec, Kdiff;
         /*
-         * The intensity of specular and diffuse lights
+         * The intensity of ambient, specular and diffuse lights
          */
-        float specint, diffint;
+        float ambint, specint, diffint;
 };
 
 #endif
