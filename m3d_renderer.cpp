@@ -391,6 +391,7 @@ void m3d_renderer_flat::render(m3d_world &world)
                 for (j = 0; j < 3; j++)
                 {
                     vtx[j] = &itro->vertices.at(triangle.index[j]);
+                    m3d_illum::inst().ambient_lighting(*vtx[j], *itro, world, colors[j]);
                     m3d_illum::inst().diffuse_lighting(*vtx[j], *itro, world, colors[j]);
                 }
 
@@ -548,6 +549,7 @@ void m3d_renderer_flatf::render(m3d_world &world)
                 for (j = 0; j < 3; j++)
                 {
                     vtx[j] = &itro->vertices.at(triangle.index[j]);
+                    m3d_illum::inst().ambient_lighting(*vtx[j], *itro, world, colors[j]);
                     m3d_illum::inst().diffuse_lighting(*vtx[j], *itro, world, colors[j]);
                 }
 
@@ -665,6 +667,7 @@ void m3d_renderer_shaded::render(m3d_world &world)
                 for (j = 0; j < 3; j++)
                 {
                     vtx[j] = &itro->vertices.at(triangle.index[j]);
+                    m3d_illum::inst().ambient_lighting(*vtx[j], *itro, world, colors[j]);
                     m3d_illum::inst().diffuse_lighting(*vtx[j], *itro, world, colors[j]);
                 }
 
