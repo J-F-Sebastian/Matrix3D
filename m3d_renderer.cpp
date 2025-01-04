@@ -10,34 +10,34 @@ using namespace std;
 
 static inline float m3d_max(float a, float b)
 {
-    return (a > b) ? a : b;
+	return (a > b) ? a : b;
 }
 
 static inline m3d_color m3d_average_light(m3d_render_color n[])
 {
-    m3d_color temp[3];
-    m3d_color out;
+	m3d_color temp[3];
+	m3d_color out;
 
-    temp[0] = n[0].Kamb + n[0].Kdiff;
-    temp[1] = n[1].Kamb + n[1].Kdiff;
-    temp[2] = n[2].Kamb + n[2].Kdiff;
+	temp[0] = n[0].Kamb + n[0].Kdiff;
+	temp[1] = n[1].Kamb + n[1].Kdiff;
+	temp[2] = n[2].Kamb + n[2].Kdiff;
 
-    m3d_color::average_colors(temp, 3, out);
-    return out;
+	m3d_color::average_colors(temp, 3, out);
+	return out;
 }
 
 m3d_renderer::~m3d_renderer()
 {
-    delete scanline;
-    delete fscanline;
-    delete zscanline;
+	delete scanline;
+	delete fscanline;
+	delete zscanline;
 }
 
 m3d_renderer::m3d_renderer(m3d_display *disp) : display(disp), zbuffer((int16_t)disp->get_xmax(), (int16_t)disp->get_ymax())
 {
-    scanline = new int16_t[display->get_ymax() * 2];
-    fscanline = new float[display->get_ymax() * 2];
-    zscanline = new float[display->get_ymax() * 2];
+	scanline = new int16_t[display->get_ymax() * 2];
+	fscanline = new float[display->get_ymax() * 2];
+	zscanline = new float[display->get_ymax() * 2];
 }
 
 /*
@@ -45,10 +45,10 @@ m3d_renderer::m3d_renderer(m3d_display *disp) : display(disp), zbuffer((int16_t)
  */
 void m3d_renderer::render(m3d_world & /*world*/)
 {
-    // Fill the surface black
-    display->clear_renderer();
-    // Update the surface
-    display->show_buffer();
+	// Fill the surface black
+	display->clear_renderer();
+	// Update the surface
+	display->show_buffer();
 }
 
 /*
@@ -56,20 +56,20 @@ void m3d_renderer::render(m3d_world & /*world*/)
  */
 void m3d_renderer::sort_triangle(m3d_vertex *vtx[3])
 {
-    if (vtx[1]->scrposition.y < vtx[0]->scrposition.y)
-    {
-        std::swap(vtx[0], vtx[1]);
-    }
+	if (vtx[1]->scrposition.y < vtx[0]->scrposition.y)
+	{
+		std::swap(vtx[0], vtx[1]);
+	}
 
-    if (vtx[1]->scrposition.y > vtx[2]->scrposition.y)
-    {
-        std::swap(vtx[1], vtx[2]);
-    }
+	if (vtx[1]->scrposition.y > vtx[2]->scrposition.y)
+	{
+		std::swap(vtx[1], vtx[2]);
+	}
 
-    if (vtx[1]->scrposition.y < vtx[0]->scrposition.y)
-    {
-        std::swap(vtx[0], vtx[1]);
-    }
+	if (vtx[1]->scrposition.y < vtx[0]->scrposition.y)
+	{
+		std::swap(vtx[0], vtx[1]);
+	}
 }
 
 /*
@@ -77,23 +77,23 @@ void m3d_renderer::sort_triangle(m3d_vertex *vtx[3])
  */
 void m3d_renderer::sort_triangle(m3d_vertex *vtx[3], struct m3d_render_color *colors)
 {
-    if (vtx[1]->scrposition.y < vtx[0]->scrposition.y)
-    {
-        std::swap(vtx[0], vtx[1]);
-        std::swap(colors[0], colors[1]);
-    }
+	if (vtx[1]->scrposition.y < vtx[0]->scrposition.y)
+	{
+		std::swap(vtx[0], vtx[1]);
+		std::swap(colors[0], colors[1]);
+	}
 
-    if (vtx[1]->scrposition.y > vtx[2]->scrposition.y)
-    {
-        std::swap(vtx[1], vtx[2]);
-        std::swap(colors[1], colors[2]);
-    }
+	if (vtx[1]->scrposition.y > vtx[2]->scrposition.y)
+	{
+		std::swap(vtx[1], vtx[2]);
+		std::swap(colors[1], colors[2]);
+	}
 
-    if (vtx[1]->scrposition.y < vtx[0]->scrposition.y)
-    {
-        std::swap(vtx[0], vtx[1]);
-        std::swap(colors[0], colors[1]);
-    }
+	if (vtx[1]->scrposition.y < vtx[0]->scrposition.y)
+	{
+		std::swap(vtx[0], vtx[1]);
+		std::swap(colors[0], colors[1]);
+	}
 }
 
 /*
@@ -104,226 +104,226 @@ void m3d_renderer::sort_triangle(m3d_vertex *vtx[3], struct m3d_render_color *co
  * Thanks to Michael Abrash for his invaluable books....
  */
 int16_t m3d_renderer::store_scanlines(int16_t x0,
-                                      int16_t y0,
-                                      int16_t x1,
-                                      int16_t y1,
-                                      unsigned start)
+				      int16_t y0,
+				      int16_t x1,
+				      int16_t y1,
+				      unsigned start)
 {
-    int16_t advancex, deltax, deltay;
-    int16_t wholestep, adjup, adjdown;
-    int16_t errorterm, inipixcount, finpixcount;
-    int16_t runlen;
-    uint32_t cnt, fill;
-    int16_t val = x0;
-    int16_t *stor = scanline + start;
+	int16_t advancex, deltax, deltay;
+	int16_t wholestep, adjup, adjdown;
+	int16_t errorterm, inipixcount, finpixcount;
+	int16_t runlen;
+	uint32_t cnt, fill;
+	int16_t val = x0;
+	int16_t *stor = scanline + start;
 
-    if (x0 > x1)
-    {
-        deltax = x0 - x1;
-        advancex = -1;
-    }
-    else
-    {
-        deltax = x1 - x0;
-        advancex = 1;
-    }
+	if (x0 > x1)
+	{
+		deltax = x0 - x1;
+		advancex = -1;
+	}
+	else
+	{
+		deltax = x1 - x0;
+		advancex = 1;
+	}
 
-    deltay = y1 - y0;
+	deltay = y1 - y0;
 
-    if (!deltay)
-    {
-        /* horizontal line, one value only */
-        *stor++ = val;
-        return 1;
-    }
+	if (!deltay)
+	{
+		/* horizontal line, one value only */
+		*stor++ = val;
+		return 1;
+	}
 
-    if (!deltax)
-    {
-        /* vertical line, all x values are the same... */
-        for (cnt = 0; cnt <= (uint32_t)deltay; cnt++)
-        {
-            *stor++ = val;
-        }
-        return (deltay + 1);
-    }
+	if (!deltax)
+	{
+		/* vertical line, all x values are the same... */
+		for (cnt = 0; cnt <= (uint32_t)deltay; cnt++)
+		{
+			*stor++ = val;
+		}
+		return (deltay + 1);
+	}
 
-    if (deltax == deltay)
-    {
-        /* diagonal line, x advances at every step with the same value */
-        *stor++ = val;
-        for (cnt = 0; cnt < (uint32_t)deltay; cnt++)
-        {
-            val += advancex;
-            *stor++ = val;
-        }
-        return (deltay + 1);
-    }
+	if (deltax == deltay)
+	{
+		/* diagonal line, x advances at every step with the same value */
+		*stor++ = val;
+		for (cnt = 0; cnt < (uint32_t)deltay; cnt++)
+		{
+			val += advancex;
+			*stor++ = val;
+		}
+		return (deltay + 1);
+	}
 
-    if (deltax < deltay)
-    {
-        /* Y major line */
+	if (deltax < deltay)
+	{
+		/* Y major line */
 
-        /* minimum # of pixels in a run */
-        wholestep = deltay / deltax;
+		/* minimum # of pixels in a run */
+		wholestep = deltay / deltax;
 
-        adjup = (deltay % deltax) * 2;
-        adjdown = deltax * 2;
-        errorterm = (deltay % deltax) - adjdown;
+		adjup = (deltay % deltax) * 2;
+		adjdown = deltax * 2;
+		errorterm = (deltay % deltax) - adjdown;
 
-        inipixcount = (wholestep / 2) + 1;
-        finpixcount = inipixcount;
+		inipixcount = (wholestep / 2) + 1;
+		finpixcount = inipixcount;
 
-        if (!adjup && !(wholestep & 1))
-        {
-            inipixcount--;
-        }
+		if (!adjup && !(wholestep & 1))
+		{
+			inipixcount--;
+		}
 
-        if (wholestep & 1)
-        {
-            errorterm += deltax;
-        }
+		if (wholestep & 1)
+		{
+			errorterm += deltax;
+		}
 
-        /* set first run of x0 */
-        for (fill = 0; fill < (uint32_t)inipixcount; fill++)
-        {
-            *stor++ = val;
-        }
-        val += advancex;
+		/* set first run of x0 */
+		for (fill = 0; fill < (uint32_t)inipixcount; fill++)
+		{
+			*stor++ = val;
+		}
+		val += advancex;
 
-        /* set all full runs, x0 is advanced at every outer loop */
-        for (cnt = 0; cnt < (uint32_t)(deltax - 1); cnt++)
-        {
-            runlen = wholestep;
-            errorterm += adjup;
+		/* set all full runs, x0 is advanced at every outer loop */
+		for (cnt = 0; cnt < (uint32_t)(deltax - 1); cnt++)
+		{
+			runlen = wholestep;
+			errorterm += adjup;
 
-            if (errorterm > 0)
-            {
-                runlen++;
-                errorterm -= adjdown;
-            }
+			if (errorterm > 0)
+			{
+				runlen++;
+				errorterm -= adjdown;
+			}
 
-            for (fill = 0; fill < (uint32_t)runlen; fill++)
-            {
-                *stor++ = val;
-            }
-            val += advancex;
-        }
+			for (fill = 0; fill < (uint32_t)runlen; fill++)
+			{
+				*stor++ = val;
+			}
+			val += advancex;
+		}
 
-        /* set the final run of pixels, x0 does not need to be updated */
-        for (fill = 0; fill < (uint32_t)finpixcount; fill++)
-        {
-            *stor++ = val;
-        }
-    }
-    else
-    {
-        /* X major */
+		/* set the final run of pixels, x0 does not need to be updated */
+		for (fill = 0; fill < (uint32_t)finpixcount; fill++)
+		{
+			*stor++ = val;
+		}
+	}
+	else
+	{
+		/* X major */
 
-        /* minimum # of pixels in a run */
-        wholestep = deltax / deltay;
+		/* minimum # of pixels in a run */
+		wholestep = deltax / deltay;
 
-        adjup = (deltax % deltay) * 2;
-        adjdown = deltay * 2;
-        errorterm = (deltax % deltay) - adjdown;
+		adjup = (deltax % deltay) * 2;
+		adjdown = deltay * 2;
+		errorterm = (deltax % deltay) - adjdown;
 
-        inipixcount = (wholestep / 2) + 1;
-        finpixcount = inipixcount;
+		inipixcount = (wholestep / 2) + 1;
+		finpixcount = inipixcount;
 
-        if (!adjup && !(wholestep & 1))
-        {
-            inipixcount--;
-        }
+		if (!adjup && !(wholestep & 1))
+		{
+			inipixcount--;
+		}
 
-        if (wholestep & 1)
-        {
-            errorterm += deltay;
-        }
+		if (wholestep & 1)
+		{
+			errorterm += deltay;
+		}
 
-        /*
-         * When X is major axis, we should draw lines along x, which means,
-         * we have multiple x values with the same y value.
-         * If advancex is negative, we are computing and ending edge, i.e. we
-         * need to store the final x0 values, not the initial, or the line
-         * drawing algorithm will fail filling in the line pixels.
-         */
-        if (advancex > 0)
-        {
-            *stor++ = val;
-            val += inipixcount;
+		/*
+		 * When X is major axis, we should draw lines along x, which means,
+		 * we have multiple x values with the same y value.
+		 * If advancex is negative, we are computing and ending edge, i.e. we
+		 * need to store the final x0 values, not the initial, or the line
+		 * drawing algorithm will fail filling in the line pixels.
+		 */
+		if (advancex > 0)
+		{
+			*stor++ = val;
+			val += inipixcount;
 
-            /* set all full runs */
-            for (cnt = 0; cnt < (uint32_t)(deltay - 1); cnt++)
-            {
-                runlen = wholestep;
-                errorterm += adjup;
+			/* set all full runs */
+			for (cnt = 0; cnt < (uint32_t)(deltay - 1); cnt++)
+			{
+				runlen = wholestep;
+				errorterm += adjup;
 
-                if (errorterm > 0)
-                {
-                    runlen++;
-                    errorterm -= adjdown;
-                }
-                *stor++ = val;
-                val += runlen;
-            }
+				if (errorterm > 0)
+				{
+					runlen++;
+					errorterm -= adjdown;
+				}
+				*stor++ = val;
+				val += runlen;
+			}
 
-            /* set the final run of pixels */
-            *stor = val;
-        }
-        else
-        {
-            *stor++ = val;
-            val -= inipixcount;
+			/* set the final run of pixels */
+			*stor = val;
+		}
+		else
+		{
+			*stor++ = val;
+			val -= inipixcount;
 
-            /* set all full runs */
-            for (cnt = 0; cnt < (uint32_t)(deltay - 1); cnt++)
-            {
-                runlen = wholestep;
-                errorterm += adjup;
+			/* set all full runs */
+			for (cnt = 0; cnt < (uint32_t)(deltay - 1); cnt++)
+			{
+				runlen = wholestep;
+				errorterm += adjup;
 
-                if (errorterm > 0)
-                {
-                    runlen++;
-                    errorterm -= adjdown;
-                }
-                *stor++ = val;
-                val -= runlen;
-            }
+				if (errorterm > 0)
+				{
+					runlen++;
+					errorterm -= adjdown;
+				}
+				*stor++ = val;
+				val -= runlen;
+			}
 
-            /* set the final run of pixels */
-            *stor = val;
-        }
-    }
-    return (deltay + 1);
+			/* set the final run of pixels */
+			*stor = val;
+		}
+	}
+	return (deltay + 1);
 }
 
 void m3d_renderer::store_fscanlines(unsigned runlen, float val1, float val2, unsigned start)
 {
-    m3d_interpolation_float run(runlen, val1, val2);
-    run.valuearray(fscanline + start);
+	m3d_interpolation_float run(runlen, val1, val2);
+	run.valuearray(fscanline + start);
 }
 
 void m3d_renderer::store_zscanlines(unsigned runlen, float val1, float val2, unsigned start)
 {
-    m3d_interpolation_float run(runlen, val1, val2);
-    run.valuearray(zscanline + start);
+	m3d_interpolation_float run(runlen, val1, val2);
+	run.valuearray(zscanline + start);
 }
 
 void m3d_renderer::compute_visible_list_and_sort(m3d_world &world)
 {
-    vislist.clear();
+	vislist.clear();
 
-    for (auto itro : world.objects_list)
-    {
-        itro->project(world.camera);
-        if (itro->trivisible.any())
-            vislist.push_front(itro);
-    }
+	for (auto itro : world.objects_list)
+	{
+		itro->project(world.camera);
+		if (itro->trivisible.any())
+			vislist.push_front(itro);
+	}
 
-    if (vislist.size())
-    {
-        world.sort(vislist);
-        zbuffer.reset();
-    }
+	if (vislist.size())
+	{
+		world.sort(vislist);
+		zbuffer.reset();
+	}
 }
 
 /*
@@ -332,41 +332,41 @@ void m3d_renderer::compute_visible_list_and_sort(m3d_world &world)
 
 void m3d_renderer_wireframe::render(m3d_world &world)
 {
-    m3d_point temp;
-    m3d_color ctemp;
-    SDL_Point toscreen[M3D_MAX_TRIANGLES * 3];
-    unsigned i, j, k;
+	m3d_point temp;
+	m3d_color ctemp;
+	SDL_Point toscreen[M3D_MAX_TRIANGLES * 3];
+	unsigned i, j, k;
 
-    // Compute visible objects
-    compute_visible_list_and_sort(world);
+	// Compute visible objects
+	compute_visible_list_and_sort(world);
 
-    // Fill the surface black
-    display->clear_renderer();
-    for (auto itro : vislist)
-    {
-        ctemp = itro->color;
-        display->set_color(ctemp.getChannel(m3d_color::R_CHANNEL),
-                           ctemp.getChannel(m3d_color::G_CHANNEL),
-                           ctemp.getChannel(m3d_color::B_CHANNEL));
+	// Fill the surface black
+	display->clear_renderer();
+	for (auto itro : vislist)
+	{
+		ctemp = itro->color;
+		display->set_color(ctemp.getChannel(m3d_color::R_CHANNEL),
+				   ctemp.getChannel(m3d_color::G_CHANNEL),
+				   ctemp.getChannel(m3d_color::B_CHANNEL));
 
-        i = k = 0;
-        for (auto &triangle : itro->mesh)
-        {
-            if (itro->trivisible[i++])
-            {
-                for (j = 0; j < 3; j++)
-                {
-                    toscreen[k++] = itro->vertices[triangle.index[j]].scrposition;
-                }
-                toscreen[k] = toscreen[k - 3];
-                k++;
-            }
-        }
-        display->draw_lines(toscreen, k);
-    }
+		i = k = 0;
+		for (auto &triangle : itro->mesh)
+		{
+			if (itro->trivisible[i++])
+			{
+				for (j = 0; j < 3; j++)
+				{
+					toscreen[k++] = itro->vertices[triangle.index[j]].scrposition;
+				}
+				toscreen[k] = toscreen[k - 3];
+				k++;
+			}
+		}
+		display->draw_lines(toscreen, k);
+	}
 
-    // Present the rendered lines
-    display->show_renderer();
+	// Present the rendered lines
+	display->show_renderer();
 }
 
 /*
