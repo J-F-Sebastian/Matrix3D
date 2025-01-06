@@ -27,7 +27,7 @@ void m3d_illumination::diffuse_lighting(m3d_vertex &vtx, m3d_render_object &obj,
 	//  Now we sum all diffuse contributions considering light position w.r.t. vtx position and the surface normal.
 	for (auto lights : world.lights_list)
 	{
-		m3d_vector L(lights->tposition);
+		m3d_vector L(lights->position);
 		L.subtract(vtxworld);
 		L.normalize();
 		float dot = L.dot_product(vtx.tnormal);
@@ -50,7 +50,7 @@ void m3d_illumination::specular_lighting(m3d_vertex &vtx, m3d_render_object &obj
 	// Now we sum all specular contributions considering light position w.r.t. vtx position and the surface normal.
 	for (auto lights : world.lights_list)
 	{
-		m3d_vector L(lights->tposition);
+		m3d_vector L(lights->position);
 		L.subtract(vtxworld);
 		// Halfway vector H
 		m3d_vector H(L + V);

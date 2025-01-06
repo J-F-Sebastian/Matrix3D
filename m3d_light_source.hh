@@ -85,7 +85,6 @@ public:
 	virtual void print(void);
 
 	m3d_point position;
-	m3d_point tposition;
 
 protected:
 	// Constant, Linear and Quadratic attenuation constants

@@ -30,7 +30,7 @@ float m3d_point_light_source::get_intensity(const m3d_point &objpos)
 {
 	// compute vector from object position to light source to compute distance
 	m3d_vector L(objpos);
-	L.subtract(tposition);
+	L.subtract(position);
 	// The distance from the object (scalar)
 	float d = L.module();
 	return (sintensity / (Kc + Kl * d + Kq * d * d));
@@ -63,7 +63,7 @@ float m3d_spot_light_source::get_intensity(const m3d_point &objpos)
 {
 	// compute vector from object position to light source to compute distance
 	m3d_vector L(objpos);
-	L.subtract(tposition);
+	L.subtract(position);
 	// distance (scalar)
 	float d = L.module();
 	L.normalize();
