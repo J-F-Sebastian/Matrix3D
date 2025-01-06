@@ -5,10 +5,10 @@
  * GOURAUD SHADING RENDERER
  */
 
-void m3d_renderer_shaded_gouraud::store_iscanlines(unsigned runlen, m3d_color &val1, m3d_color &val2, unsigned start)
+void m3d_renderer_shaded_gouraud::store_cscanlines(unsigned runlen, m3d_color &val1, m3d_color &val2, unsigned start)
 {
 	m3d_interpolation_color run(runlen, val1, val2);
-	run.valuearray(iscanline + start);
+	run.valuearray(cscanline + start);
 }
 
 void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m3d_vertex *vtx[], m3d_world &world)
@@ -31,7 +31,7 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m
 	int16_t y = (int16_t)vtx[0]->scrposition.y;
 	float *lscanline, *rscanline;
 	float *lzscanline, *rzscanline;
-	uint32_t *liscanline, *riscanline;
+	uint32_t *lcscanline, *rcscanline;
 	float lgradient = (p5 - p3) / (float)runlen0;
 	float rgradient = (p4 - p3) / (float)runlen1;
 
@@ -51,9 +51,9 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m
 		store_zscanlines(runlen0, p0, p2);
 		store_zscanlines(runlen1, p0, p1, runlen0);
 		store_zscanlines(runlen2, p1, p2, runlen0 + runlen1 - 1);
-		store_iscanlines(runlen0, c0, c2);
-		store_iscanlines(runlen1, c0, c1, runlen0);
-		store_iscanlines(runlen2, c1, c2, runlen0 + runlen1 - 1);
+		store_cscanlines(runlen0, c0, c2);
+		store_cscanlines(runlen1, c0, c1, runlen0);
+		store_cscanlines(runlen2, c1, c2, runlen0 + runlen1 - 1);
 	}
 	else
 	{
@@ -63,17 +63,17 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m
 		store_zscanlines(runlen1, p0, p1);
 		store_zscanlines(runlen2, p1, p2, runlen1 - 1);
 		store_zscanlines(runlen0, p0, p2, runlen1 + runlen2 - 1);
-		store_iscanlines(runlen1, c0, c1);
-		store_iscanlines(runlen2, c1, c2, runlen1 - 1);
-		store_iscanlines(runlen0, c0, c2, runlen1 + runlen2 - 1);
+		store_cscanlines(runlen1, c0, c1);
+		store_cscanlines(runlen2, c1, c2, runlen1 - 1);
+		store_cscanlines(runlen0, c0, c2, runlen1 + runlen2 - 1);
 	}
 
 	lscanline = fscanline;
 	rscanline = fscanline + runlen0;
 	lzscanline = zscanline;
 	rzscanline = zscanline + runlen0;
-	liscanline = iscanline;
-	riscanline = iscanline + runlen0;
+	lcscanline = cscanline;
+	rcscanline = cscanline + runlen0;
 
 	while (runlen0--)
 	{
@@ -81,7 +81,7 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m
 		if (fillrunlen)
 		{
 			m3d_interpolation_float sl(fillrunlen, *lzscanline, *rzscanline);
-			m3d_color ca(*liscanline), cb(*riscanline);
+			m3d_color ca(*lcscanline), cb(*rcscanline);
 			m3d_interpolation_color lint(fillrunlen, ca, cb);
 			output = display->get_video_buffer((int16_t)truncf(*lscanline), y);
 			outz = zbuffer.get_zbuffer((int16_t)truncf(*lscanline), y);
@@ -101,8 +101,8 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m
 		rscanline++;
 		lzscanline++;
 		rzscanline++;
-		liscanline++;
-		riscanline++;
+		lcscanline++;
+		rcscanline++;
 		y++;
 	}
 }
