@@ -206,13 +206,13 @@ int main(int argc, char *argv[])
 	world.add_object(cubeo2);
 	world.add_object(cubeo3);
 	world.add_object(sphereo);
-	world.print();
+	// world.print();
 
 	time_t chronograph2 = time(NULL);
 	std::cout << "SETUP [" << renderer_index << "]: " << chronograph2 - chronograph << std::endl;
 	renderer[renderer_index]->render(world);
-
 	objcmd = &cubeo;
+#if 0
 	chronograph = time(NULL);
 	while (goon)
 	{
@@ -237,13 +237,13 @@ int main(int argc, char *argv[])
 		objcmd->roll(stepping);
 		if (stepping < 359.0f)
 		{
-			stepping += 1.37f;
-			SDL_Delay(50);
+			stepping += 0.07f;
+			// SDL_Delay(50);
 		}
 		else
 		{
 			stepping = 1.0f;
-			if (renderer_index > 5)
+			if (renderer_index > 1)
 				goon = 0;
 			else
 			{
@@ -255,11 +255,14 @@ int main(int argc, char *argv[])
 		}
 
 		renderer[renderer_index]->render(world);
+		SDL_PollEvent(&event);
 	}
-	// chronograph2 = time(NULL);
-	// std::cout << "RENDERING [" << renderer_index << "]: " << chronograph2 - chronograph << std::endl;
-	delete[] renderer;
+	chronograph2 = time(NULL);
+	std::cout << "RENDERING [" << renderer_index << "]: " << chronograph2 - chronograph << std::endl;
+	delete[] &renderer;
 	return 0;
+
+#endif
 
 	while (goon && SDL_WaitEvent(&event))
 	{
@@ -319,9 +322,10 @@ int main(int argc, char *argv[])
 		default:
 			continue;
 		}
+		// world.print();
 		renderer[renderer_index]->render(world);
 	}
-	delete[] renderer;
+	delete[] &renderer;
 	return 0;
 }
 
