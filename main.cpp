@@ -104,15 +104,17 @@ INT WINAPI wWinMain( HINSTANCE hInst, HINSTANCE, LPWSTR, INT )
     return 0;
 }
 #else
-#include <iostream>
 
 #define NELEMENTS(x) (sizeof(x) / sizeof(x[0]))
 
-// TEMP NEED A CLASS TO HANDLE EVENTS & WORLD UPDATES
+#define SDL_MAIN_HANDLED
+#include <iostream>
 #include <SDL.h>
 #include <ctime>
-#include "m3d_renderer.hh"
-
+#include "m3d_renderer_wireframe.hh"
+#include "m3d_renderer_flat.hh"
+#include "m3d_renderer_gouraud.hh"
+#include "m3d_renderer_phong.hh"
 #include "cubeobject.mes"
 #include "sphereobject.mes"
 
@@ -156,6 +158,8 @@ int main(int argc, char *argv[])
 	time_t chronograph = time(NULL);
 
 	std::cout << "Matrix3D" << std::endl;
+
+#if !defined(_MSC_VER)
 	__builtin_cpu_init();
 	if (__builtin_cpu_is("intel"))
 		std::cout << "running on a Intel CPU." << std::endl;
@@ -177,6 +181,7 @@ int main(int argc, char *argv[])
 		std::cout << "with SSE4.2 instructions." << std::endl;
 	if (__builtin_cpu_supports("sse4a"))
 		std::cout << "with SSE4A instructions." << std::endl;
+#endif
 
 	renderer[0] = new m3d_renderer_wireframe(&display);
 	renderer[1] = new m3d_renderer_flat(&display);
