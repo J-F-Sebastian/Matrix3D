@@ -22,6 +22,8 @@ MYOBJDIR = matrix3d
 MYOBJS = $(MYOBJDIR)\m3d_display.obj $(MYOBJDIR)\m3d_world.obj $(MYOBJDIR)\m3d_vertex.obj $(MYOBJDIR)\m3d_renderer.obj $(MYOBJDIR)\m3d_object.obj
 MYOBJS = $(MYOBJS) $(MYOBJDIR)\m3d_math_vector.obj $(MYOBJDIR)\m3d_math_point.obj $(MYOBJDIR)\m3d_math_matrix.obj $(MYOBJDIR)\m3d_math_axis.obj
 MYOBJS = $(MYOBJS) $(MYOBJDIR)\m3d_light_source.obj $(MYOBJDIR)\m3d_color.obj $(MYOBJDIR)\m3d_illum.obj
+MYOBJS = $(MYOBJS) $(MYOBJDIR)\m3d_renderer_wireframe.obj $(MYOBJDIR)\m3d_renderer_flat.obj $(MYOBJDIR)\m3d_renderer_shaded.obj
+MYOBJS = $(MYOBJS) $(MYOBJDIR)\m3d_renderer_gouraud.obj $(MYOBJDIR)\m3d_renderer_phong.obj
 MYOBJS = $(MYOBJS) $(MYOBJDIR)\m3d_camera.obj $(MYOBJDIR)\m3d_interp.obj $(MYOBJDIR)\main.obj
 
 CPPFLAGS = /arch:AVX /W4 /GA /std:c++20 /EHcs /MP4 /c
