@@ -26,8 +26,14 @@
 
 void m3d_renderer_shaded_phong::store_vscanlines(unsigned runlen, m3d_vertex &val1, m3d_vertex &val2, unsigned start)
 {
-	m3d_interpolation_vector_perspective run(runlen, val1.prjposition[Z_C], val2.prjposition[Z_C], val1.tnormal, val2.tnormal);
+	m3d_interpolation_vector run(runlen, val1.tnormal, val2.tnormal);
 	run.valuearray(vscanline + start);
+}
+
+void m3d_renderer_shaded_phong::store_wscanlines(unsigned runlen, m3d_vertex &val1, m3d_vertex &val2, unsigned start)
+{
+	m3d_interpolation_vector run(runlen, val1.tposition, val2.tposition);
+	run.valuearray(wscanline + start);
 }
 
 void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d_vertex *vtx[], m3d_world &world)
@@ -43,11 +49,12 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d
 	unsigned runlen0 = (unsigned)(vtx[2]->scrposition.y - vtx[0]->scrposition.y + 1);
 	unsigned runlen1 = (unsigned)(vtx[1]->scrposition.y - vtx[0]->scrposition.y + 1);
 	unsigned runlen2 = (unsigned)(vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1);
-	int fillrunlen;
+	unsigned int fillrunlen;
 	int16_t y = (int16_t)vtx[0]->scrposition.y;
 	float *lscanline, *rscanline;
 	float *lzscanline, *rzscanline;
 	m3d_vector *lvscanline, *rvscanline;
+	m3d_point *lwscanline, *rwscanline;
 	float lgradient = (p5 - p3) / (float)runlen0;
 	float rgradient = (p4 - p3) / (float)runlen1;
 
@@ -70,6 +77,9 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d
 		store_vscanlines(runlen0, *vtx[0], *vtx[2]);
 		store_vscanlines(runlen1, *vtx[0], *vtx[1], runlen0);
 		store_vscanlines(runlen2, *vtx[1], *vtx[2], runlen0 + runlen1 - 1);
+		store_wscanlines(runlen0, *vtx[0], *vtx[2]);
+		store_wscanlines(runlen1, *vtx[0], *vtx[1], runlen0);
+		store_wscanlines(runlen2, *vtx[1], *vtx[2], runlen0 + runlen1 - 1);
 	}
 	else
 	{
@@ -82,6 +92,9 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d
 		store_vscanlines(runlen1, *vtx[0], *vtx[1]);
 		store_vscanlines(runlen2, *vtx[1], *vtx[2], runlen1 - 1);
 		store_vscanlines(runlen0, *vtx[0], *vtx[2], runlen1 + runlen2 - 1);
+		store_wscanlines(runlen1, *vtx[0], *vtx[1]);
+		store_wscanlines(runlen2, *vtx[1], *vtx[2], runlen1 - 1);
+		store_wscanlines(runlen0, *vtx[0], *vtx[2], runlen1 + runlen2 - 1);
 	}
 
 	lscanline = fscanline;
@@ -90,13 +103,16 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d
 	rzscanline = zscanline + runlen0;
 	lvscanline = vscanline;
 	rvscanline = vscanline + runlen0;
+	lwscanline = wscanline;
+	rwscanline = wscanline + runlen0;
 	while (runlen0--)
 	{
-		fillrunlen = lroundf(*rscanline - *lscanline) + 1;
+		fillrunlen = (unsigned)lroundf(*rscanline - *lscanline) + 1;
 		if (fillrunlen)
 		{
 			m3d_interpolation_float sl(fillrunlen, *lzscanline, *rzscanline);
-			m3d_interpolation_vector_perspective norm(fillrunlen, *lzscanline, *rzscanline, *lvscanline, *rvscanline);
+			m3d_interpolation_vector norm(fillrunlen, *lvscanline, *rvscanline);
+			m3d_interpolation_vector pts(fillrunlen, *lwscanline, *rwscanline);
 			output = display->get_video_buffer((int16_t)truncf(*lscanline), y);
 			outz = zbuffer.get_zbuffer((int16_t)truncf(*lscanline), y);
 			while (sl.finished() == false)
@@ -104,13 +120,12 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d
 				if (zbuffer.test_update(outz, sl.value()))
 				{
 					m3d_vertex tmp;
-					tmp.tposition[X_C] = *lscanline;
-					tmp.tposition[Y_C] = y;
-					tmp.tposition[Y_C] = sl.value();
+					tmp.tposition = (m3d_point &)pts.value();
 					tmp.tnormal = norm.value();
 					m3d_illum::inst().ambient_lighting(tmp, obj, world, colors[0]);
 					m3d_illum::inst().diffuse_lighting(tmp, obj, world, colors[0]);
-					m3d_color total = colors[0].Kamb + colors[0].Kdiff;
+					m3d_illum::inst().specular_lighting(tmp, obj, world, colors[0]);
+					m3d_color total = colors[0].Kamb + colors[0].Kdiff + colors[0].Kspec;
 					*output = total.getColor();
 				}
 				++output;
@@ -125,6 +140,8 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d
 		rzscanline++;
 		lvscanline++;
 		rvscanline++;
+		lwscanline++;
+		rwscanline++;
 		y++;
 	}
 }
