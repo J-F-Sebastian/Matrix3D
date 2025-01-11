@@ -28,7 +28,7 @@ public:
 	m3d_zbuffer() : zbuffer(nullptr), size(0), xres(0), yres(0) {}
 	m3d_zbuffer(int16_t xres, int16_t yres) : size(xres * yres), xres(xres), yres(yres)
 	{
-		zbuffer = new float[size];
+		zbuffer = new float[(unsigned)size];
 		reset();
 	}
 
