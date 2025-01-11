@@ -19,6 +19,7 @@
 
 #include "m3d_illum.hh"
 #include <iostream>
+
 static inline float m3d_max(float a, float b)
 {
 	return (a > b) ? a : b;
@@ -63,7 +64,7 @@ void m3d_illumination::specular_lighting(m3d_vertex &vtx, m3d_render_object &obj
 	float lightint = 0.0f;
 	m3d_vector vtxworld(vtx.tposition);
 	m3d_point cam;
-	world.camera.get_tposition(cam);
+	world.camera.get_position(cam);
 	m3d_vector V(vtx.tposition);
 	V.subtract(cam);
 	// Now we sum all specular contributions considering light position w.r.t. vtx position and the surface normal.
@@ -75,7 +76,7 @@ void m3d_illumination::specular_lighting(m3d_vertex &vtx, m3d_render_object &obj
 		m3d_vector H(L + V);
 		H.normalize();
 		L.normalize();
-		if (vtx.normal.dot_product(L) > 0.0f)
+		if (vtx.tnormal.dot_product(L) > 0.0f)
 		{
 			float dot = L.dot_product(vtx.tnormal);
 			// We hardcoded a value of p = 8 but this should be dynamic....
