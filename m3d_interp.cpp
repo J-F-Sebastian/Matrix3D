@@ -107,19 +107,19 @@ m3d_interpolation_color::m3d_interpolation_color(const int steps, m3d_color &val
 	{
 		if (val2.getChannel(i) >= val1.getChannel(i))
 		{
-			delta[i] = val2.getChannel(i) - val1.getChannel(i);
+			delta[i] = (unsigned)(val2.getChannel(i) - val1.getChannel(i));
 			delta[i] <<= 24;
 			delta[i] /= this->steps;
 		}
 		else
 		{
-			delta[i] = val1.getChannel(i) - val2.getChannel(i);
+			delta[i] = (unsigned)(val1.getChannel(i) - val2.getChannel(i));
 			delta[i] <<= 24;
 			delta[i] /= this->steps;
 			delta[i] = UINT_MAX - delta[i];
 		}
-		acc[i] = val.channels[i] << 24;
-		acc[i] += 1 << 23;
+		acc[i] = (unsigned)val.channels[i] << 24;
+		acc[i] += 1U << 23;
 	}
 }
 
@@ -131,19 +131,19 @@ void m3d_interpolation_color::init(const int step, m3d_color &val1, m3d_color &v
 	{
 		if (val2.getChannel(i) >= val1.getChannel(i))
 		{
-			delta[i] = val2.getChannel(i) - val1.getChannel(i);
+			delta[i] = (unsigned)(val2.getChannel(i) - val1.getChannel(i));
 			delta[i] <<= 24;
 			delta[i] /= steps;
 		}
 		else
 		{
-			delta[i] = val1.getChannel(i) - val2.getChannel(i);
+			delta[i] = (unsigned)(val1.getChannel(i) - val2.getChannel(i));
 			delta[i] <<= 24;
 			delta[i] /= steps;
 			delta[i] = UINT_MAX - delta[i];
 		}
-		acc[i] = val.channels[i] << 24;
-		acc[i] += 1 << 23;
+		acc[i] = (unsigned)val.channels[i] << 24;
+		acc[i] += 1U << 23;
 	}
 }
 

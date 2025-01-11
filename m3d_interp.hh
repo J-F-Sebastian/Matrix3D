@@ -56,6 +56,8 @@ public:
 			this->steps = 1;
 	}
 
+	virtual ~m3d_interpolation() {}
+
 	virtual void step(void) = 0;
 
 	inline bool finished(void) const
