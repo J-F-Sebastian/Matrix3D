@@ -40,9 +40,9 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d
 	float p3 = (float)vtx[0]->scrposition.x + 0.5f;
 	float p4 = (float)vtx[1]->scrposition.x + 0.5f;
 	float p5 = (float)vtx[2]->scrposition.x + 0.5f;
-	unsigned runlen0 = vtx[2]->scrposition.y - vtx[0]->scrposition.y + 1;
-	unsigned runlen1 = vtx[1]->scrposition.y - vtx[0]->scrposition.y + 1;
-	unsigned runlen2 = vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1;
+	unsigned runlen0 = (unsigned)(vtx[2]->scrposition.y - vtx[0]->scrposition.y + 1);
+	unsigned runlen1 = (unsigned)(vtx[1]->scrposition.y - vtx[0]->scrposition.y + 1);
+	unsigned runlen2 = (unsigned)(vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1);
 	int fillrunlen;
 	int16_t y = (int16_t)vtx[0]->scrposition.y;
 	float *lscanline, *rscanline;
