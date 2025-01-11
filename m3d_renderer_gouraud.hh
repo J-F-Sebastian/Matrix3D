@@ -28,7 +28,7 @@ class m3d_renderer_shaded_gouraud : public m3d_renderer_shaded
 public:
 	/** Default constructor */
 	m3d_renderer_shaded_gouraud() : m3d_renderer_shaded() {};
-	explicit m3d_renderer_shaded_gouraud(m3d_display *disp) : m3d_renderer_shaded(disp) { cscanline = new uint32_t[display->get_ymax() * 2]; };
+	explicit m3d_renderer_shaded_gouraud(m3d_display *disp) : m3d_renderer_shaded(disp) { cscanline = new uint32_t[(unsigned)display->get_ymax() * 2]; };
 
 	/** Default destructor */
 	virtual ~m3d_renderer_shaded_gouraud() { delete cscanline; };

@@ -40,13 +40,13 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m
 	float p3 = (float)vtx[0]->scrposition.x + 0.5f;
 	float p4 = (float)vtx[1]->scrposition.x + 0.5f;
 	float p5 = (float)vtx[2]->scrposition.x + 0.5f;
-	unsigned runlen0 = vtx[2]->scrposition.y - vtx[0]->scrposition.y + 1;
-	unsigned runlen1 = vtx[1]->scrposition.y - vtx[0]->scrposition.y + 1;
-	unsigned runlen2 = vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1;
+	unsigned runlen0 = (unsigned)(vtx[2]->scrposition.y - vtx[0]->scrposition.y + 1);
+	unsigned runlen1 = (unsigned)(vtx[1]->scrposition.y - vtx[0]->scrposition.y + 1);
+	unsigned runlen2 = (unsigned)(vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1);
 	m3d_color c0 = colors[0].Kamb + colors[0].Kdiff;
 	m3d_color c1 = colors[1].Kamb + colors[1].Kdiff;
 	m3d_color c2 = colors[2].Kamb + colors[2].Kdiff;
-	int fillrunlen;
+	unsigned int fillrunlen;
 	int16_t y = (int16_t)vtx[0]->scrposition.y;
 	float *lscanline, *rscanline;
 	float *lzscanline, *rzscanline;
@@ -96,7 +96,7 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m
 
 	while (runlen0--)
 	{
-		fillrunlen = lroundf(*rscanline - *lscanline) + 1;
+		fillrunlen = (unsigned)lroundf(*rscanline - *lscanline) + 1;
 		if (fillrunlen)
 		{
 			m3d_interpolation_float sl(fillrunlen, *lzscanline, *rzscanline);
