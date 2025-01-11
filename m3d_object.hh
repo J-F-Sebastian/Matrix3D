@@ -201,7 +201,7 @@ public:
 		OBJ_CHANGED = 1 << 7
 	};
 
-	m3d_render_object() : m3d_object(), color(), flags(0), z_sorting(0.0f) {};
+	m3d_render_object() : m3d_object(), z_sorting(0.0f), color(), flags(0) {};
 
 	~m3d_render_object() {};
 
