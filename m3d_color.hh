@@ -79,9 +79,9 @@ public:
 
 	friend m3d_color operator*(m3d_color some, const m3d_color &other)
 	{
-		some.mycolor.channels[m3d_color::R_CHANNEL] = (some.mycolor.channels[m3d_color::R_CHANNEL] * other.mycolor.channels[m3d_color::R_CHANNEL]) >> 8;
-		some.mycolor.channels[m3d_color::G_CHANNEL] = (some.mycolor.channels[m3d_color::G_CHANNEL] * other.mycolor.channels[m3d_color::G_CHANNEL]) >> 8;
-		some.mycolor.channels[m3d_color::B_CHANNEL] = (some.mycolor.channels[m3d_color::B_CHANNEL] * other.mycolor.channels[m3d_color::B_CHANNEL]) >> 8;
+		some.mycolor.channels[m3d_color::R_CHANNEL] = (uint8_t)((some.mycolor.channels[m3d_color::R_CHANNEL] * other.mycolor.channels[m3d_color::R_CHANNEL]) >> 8);
+		some.mycolor.channels[m3d_color::G_CHANNEL] = (uint8_t)((some.mycolor.channels[m3d_color::G_CHANNEL] * other.mycolor.channels[m3d_color::G_CHANNEL]) >> 8);
+		some.mycolor.channels[m3d_color::B_CHANNEL] = (uint8_t)((some.mycolor.channels[m3d_color::B_CHANNEL] * other.mycolor.channels[m3d_color::B_CHANNEL]) >> 8);
 		return some;
 	}
 
@@ -89,15 +89,15 @@ public:
 	{
 		unsigned temp;
 		// Saturated sums
-		temp = some.mycolor.channels[m3d_color::R_CHANNEL] + other.mycolor.channels[m3d_color::R_CHANNEL];
+		temp = (unsigned)(some.mycolor.channels[m3d_color::R_CHANNEL] + other.mycolor.channels[m3d_color::R_CHANNEL]);
 		if (temp > UCHAR_MAX)
 			temp = UCHAR_MAX;
 		some.mycolor.channels[m3d_color::R_CHANNEL] = (uint8_t)temp;
-		temp = some.mycolor.channels[m3d_color::G_CHANNEL] + other.mycolor.channels[m3d_color::G_CHANNEL];
+		temp = (unsigned)(some.mycolor.channels[m3d_color::G_CHANNEL] + other.mycolor.channels[m3d_color::G_CHANNEL]);
 		if (temp > UCHAR_MAX)
 			temp = UCHAR_MAX;
 		some.mycolor.channels[m3d_color::G_CHANNEL] = (uint8_t)temp;
-		temp = some.mycolor.channels[m3d_color::B_CHANNEL] + other.mycolor.channels[m3d_color::B_CHANNEL];
+		temp = (unsigned)(some.mycolor.channels[m3d_color::B_CHANNEL] + other.mycolor.channels[m3d_color::B_CHANNEL]);
 		if (temp > UCHAR_MAX)
 			temp = UCHAR_MAX;
 		some.mycolor.channels[m3d_color::B_CHANNEL] = (uint8_t)temp;
