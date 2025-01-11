@@ -28,7 +28,7 @@ class m3d_renderer_shaded : public m3d_renderer
 public:
 	/** Default constructor */
 	m3d_renderer_shaded() : m3d_renderer() {};
-	explicit m3d_renderer_shaded(m3d_display *disp) : m3d_renderer(disp) { iscanline = new float[display->get_ymax() * 2]; };
+	explicit m3d_renderer_shaded(m3d_display *disp) : m3d_renderer(disp) { iscanline = new float[(unsigned)display->get_ymax() * 2]; };
 
 	/** Default destructor */
 	virtual ~m3d_renderer_shaded() { delete iscanline; };
