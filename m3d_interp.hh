@@ -50,7 +50,7 @@
 class m3d_interpolation
 {
 public:
-	explicit m3d_interpolation(const int steps) : steps(steps)
+	explicit m3d_interpolation(const unsigned int steps) : steps(steps)
 	{
 		if (this->steps < 1)
 			this->steps = 1;
@@ -65,10 +65,10 @@ public:
 		return (steps) ? false : true;
 	}
 
-	inline int stepsvalue(void) const { return steps; }
+	inline unsigned int stepsvalue(void) const { return steps; }
 
 protected:
-	int steps;
+	unsigned int steps;
 };
 
 /*
@@ -78,10 +78,10 @@ class m3d_interpolation_float : public m3d_interpolation
 {
 public:
 	m3d_interpolation_float() : m3d_interpolation(0), start(0.0f), val(0.0f), delta(0.0f) {}
-	explicit m3d_interpolation_float(const int steps);
-	explicit m3d_interpolation_float(const int steps, const float val1, const float val2);
+	explicit m3d_interpolation_float(const unsigned int steps);
+	explicit m3d_interpolation_float(const unsigned int steps, const float val1, const float val2);
 
-	void init(const int step, const float val1, const float val2);
+	void init(const unsigned int step, const float val1, const float val2);
 
 	virtual void step(void);
 
@@ -91,7 +91,7 @@ public:
 
 	inline float deltavalue(void) { return delta; }
 
-	inline float compute(int stepn) { return start + (float)stepn * delta; }
+	inline float compute(const unsigned int stepn) { return start + (float)stepn * delta; }
 
 private:
 	float start, val, delta;
@@ -104,10 +104,10 @@ class m3d_interpolation_short : public m3d_interpolation
 {
 public:
 	m3d_interpolation_short() : m3d_interpolation(0), start(0), val(0), delta(0) {}
-	explicit m3d_interpolation_short(const int steps);
-	explicit m3d_interpolation_short(const int steps, const short val1, const short val2);
+	explicit m3d_interpolation_short(const unsigned int steps);
+	explicit m3d_interpolation_short(const unsigned int steps, const short val1, const short val2);
 
-	void init(const int step, const short val1, const short val2);
+	void init(const unsigned int step, const short val1, const short val2);
 
 	virtual void step(void);
 
@@ -117,7 +117,7 @@ public:
 
 	inline int deltavalue(void) { return delta; }
 
-	inline short compute(int stepn) { return (short)((start + stepn * delta + 0x8000) >> 16); }
+	inline short compute(const unsigned int stepn) { return (short)((start + stepn * delta + 0x8000) >> 16); }
 
 private:
 	int start, val, delta;
@@ -136,10 +136,10 @@ public:
 		acc[0] = acc[1] = acc[2] = 0;
 	}
 
-	explicit m3d_interpolation_color(const int steps);
-	explicit m3d_interpolation_color(const int steps, m3d_color &val1, m3d_color &val2);
+	explicit m3d_interpolation_color(const unsigned int steps);
+	explicit m3d_interpolation_color(const unsigned int steps, m3d_color &val1, m3d_color &val2);
 
-	void init(const int steps, m3d_color &val1, m3d_color &val2);
+	void init(const unsigned int steps, m3d_color &val1, m3d_color &val2);
 
 	virtual void step(void);
 
@@ -167,7 +167,7 @@ private:
 class m3d_interpolation_float_perspective : public m3d_interpolation
 {
 public:
-	m3d_interpolation_float_perspective(int steps, float z1, float z2, float val1, float val2);
+	m3d_interpolation_float_perspective(const unsigned int steps, float z1, float z2, float val1, float val2);
 
 	virtual void step(void);
 
@@ -190,7 +190,7 @@ private:
 class m3d_interpolation_vector : public m3d_interpolation
 {
 public:
-	m3d_interpolation_vector(int steps, m3d_vector &v1, m3d_vector &v2);
+	m3d_interpolation_vector(const unsigned int steps, m3d_vector &v1, m3d_vector &v2);
 
 	virtual void step(void);
 
@@ -213,7 +213,7 @@ private:
 class m3d_interpolation_vector_perspective : public m3d_interpolation
 {
 public:
-	m3d_interpolation_vector_perspective(int steps, float z1, float z2, m3d_vector &v1, m3d_vector &v2);
+	m3d_interpolation_vector_perspective(const unsigned int steps, float z1, float z2, m3d_vector &v1, m3d_vector &v2);
 
 	virtual void step(void);
 
