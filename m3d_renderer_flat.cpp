@@ -90,13 +90,13 @@ void m3d_renderer_flat::render(m3d_world &world)
 							    (int16_t)vtx[0]->scrposition.y,
 							    (int16_t)vtx[1]->scrposition.x,
 							    (int16_t)vtx[1]->scrposition.y,
-							    runlen[0]);
+							    (unsigned)runlen[0]);
 
 				runlen[2] = store_scanlines((int16_t)vtx[1]->scrposition.x,
 							    (int16_t)vtx[1]->scrposition.y,
 							    (int16_t)vtx[2]->scrposition.x,
 							    (int16_t)vtx[2]->scrposition.y,
-							    runlen[0] + runlen[1] - 1);
+							    (unsigned)(runlen[0] + runlen[1] - 1));
 
 				triangle_fill_flat(vtx, runlen, color);
 			}
@@ -114,8 +114,8 @@ void m3d_renderer_flat::triangle_fill_flat(m3d_vertex *vtx[], int16_t *runlen, m
 	int16_t y = (int16_t)vtx[0]->scrposition.y;
 	int steps;
 	int16_t *leftx, *rightx;
-	m3d_interpolation_float leftz(runlen[1]), rightz(runlen[1]);
-	m3d_interpolation_float leftz2(runlen[2]), rightz2(runlen[2]);
+	m3d_interpolation_float leftz((unsigned)runlen[1]), rightz((unsigned)runlen[1]);
+	m3d_interpolation_float leftz2((unsigned)runlen[2]), rightz2((unsigned)runlen[2]);
 
 	/*
 	 * check x values to understand who's the left half and who's the right.
