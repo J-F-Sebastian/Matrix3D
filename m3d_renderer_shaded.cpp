@@ -78,9 +78,9 @@ void m3d_renderer_shaded::triangle_fill_shaded(m3d_render_object &obj, m3d_verte
 	float i0 = colors[0].ambint + colors[0].diffint;
 	float i1 = colors[1].ambint + colors[1].diffint;
 	float i2 = colors[2].ambint + colors[2].diffint;
-	unsigned runlen0 = vtx[2]->scrposition.y - vtx[0]->scrposition.y + 1;
-	unsigned runlen1 = vtx[1]->scrposition.y - vtx[0]->scrposition.y + 1;
-	unsigned runlen2 = vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1;
+	unsigned runlen0 = (unsigned)(vtx[2]->scrposition.y - vtx[0]->scrposition.y + 1);
+	unsigned runlen1 = (unsigned)(vtx[1]->scrposition.y - vtx[0]->scrposition.y + 1);
+	unsigned runlen2 = (unsigned)(vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1);
 	int fillrunlen;
 	int16_t y = (int16_t)vtx[0]->scrposition.y;
 	float *lscanline, *rscanline;
