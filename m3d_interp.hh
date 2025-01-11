@@ -178,6 +178,30 @@ private:
 };
 
 /*
+ * Linear interpolation of vectors
+ *
+ * vector(N) = vector(1)*(1 - n) + vector(2)*n
+ *
+ * n goes from 0 to 1, real values.
+ *
+ */
+class m3d_interpolation_vector : public m3d_interpolation
+{
+public:
+	m3d_interpolation_vector(int steps, m3d_vector &v1, m3d_vector &v2);
+
+	virtual void step(void);
+
+	void valuearray(m3d_vector *out);
+
+	inline m3d_vector &value(void) { return val; }
+
+private:
+	float z1inv, deltazinv;
+	m3d_vector vector1, deltavector, val;
+};
+
+/*
  * Linear interpolation of vectors with perspective correction.
  *
  * 1/z3 = 1/z1 + (1/z2 - 1/z1)*n

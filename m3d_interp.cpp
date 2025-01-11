@@ -202,6 +202,33 @@ void m3d_interpolation_float_perspective::valuearray(float *out)
 	}
 }
 
+m3d_interpolation_vector::m3d_interpolation_vector(int steps, m3d_vector &v1, m3d_vector &v2) : m3d_interpolation(steps), vector1(v1), val(v1)
+{
+	deltavector.myvector[X_C] = (v2.myvector[X_C] - v1.myvector[X_C]) / (float)this->steps;
+	deltavector.myvector[Y_C] = (v2.myvector[Y_C] - v1.myvector[Y_C]) / (float)this->steps;
+	deltavector.myvector[Z_C] = (v2.myvector[Z_C] - v1.myvector[Z_C]) / (float)this->steps;
+}
+
+void m3d_interpolation_vector::step()
+{
+	if (steps)
+	{
+		vector1.add(deltavector);
+		val = vector1;
+		steps--;
+	}
+}
+
+void m3d_interpolation_vector::valuearray(m3d_vector *out)
+{
+	while (steps--)
+	{
+		*out++ = val;
+		vector1.add(deltavector);
+		val = vector1;
+	}
+}
+
 m3d_interpolation_vector_perspective::m3d_interpolation_vector_perspective(int steps, float z1, float z2, m3d_vector &v1, m3d_vector &v2) : m3d_interpolation(steps), vector1(v1), val(v1)
 {
 	deltavector.myvector[X_C] = (v2.myvector[X_C] / z2 - v1.myvector[X_C] / z1) / (float)this->steps;
