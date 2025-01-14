@@ -282,6 +282,7 @@ int main(int argc, char *argv[])
 	return 0;
 
 #endif
+	renderer[renderer_index]->render(world);
 
 	while (goon && SDL_WaitEvent(&event))
 	{
