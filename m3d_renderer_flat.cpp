@@ -121,7 +121,7 @@ void m3d_renderer_flat::triangle_fill_flat(m3d_vertex *vtx[], int16_t *runlen, m
 	 * check x values to understand who's the left half and who's the right.
 	 * First run length is ALWAYS the longest run.
 	 */
-	if (scanline[runlen[0] / 2] <= scanline[runlen[0] + runlen[1] - 1])
+	if (scanline[runlen[1] - 1] <= scanline[runlen[0] + runlen[1] - 1])
 	{
 		leftx = scanline;
 		rightx = scanline + runlen[0];
