@@ -26,15 +26,29 @@ m3d_interpolation_float::m3d_interpolation_float(const unsigned int steps) : m3d
 
 m3d_interpolation_float::m3d_interpolation_float(const unsigned int steps, const float val1, const float val2) : m3d_interpolation(steps), start(val1), val(val1)
 {
-	delta = (val2 - val1) / (float)this->steps;
+	if (steps == 1)
+	{
+		delta = 0.0f;
+	}
+	else
+	{
+		delta = (val2 - val1) / (float)(this->steps - 1);
+	}
 }
 
 void m3d_interpolation_float::init(const unsigned int step, const float val1, const float val2)
 {
 	steps = (step > 0) ? step : 1;
-	start = val1;
-	val = val1;
-	delta = (val2 - val1) / (float)steps;
+	val = start = val1;
+
+	if (step == 1)
+	{
+		delta = 0.0f;
+	}
+	else
+	{
+		delta = (val2 - val1) / (float)(steps - 1);
+	}
 }
 
 void m3d_interpolation_float::step()
@@ -59,20 +73,33 @@ m3d_interpolation_short::m3d_interpolation_short(const unsigned int steps) : m3d
 
 m3d_interpolation_short::m3d_interpolation_short(const unsigned int steps, const short val1, const short val2) : m3d_interpolation(steps), start(val1 << 16), val(val1 << 16)
 {
-	delta = (int)(val2 - val1);
-	delta <<= 16;
-	delta /= this->steps;
+	if (steps == 1)
+	{
+		delta = 0;
+	}
+	else
+	{
+		delta = (int)(val2 - val1);
+		delta <<= 16;
+		delta /= (int)(this->steps - 1);
+	}
 }
 
 void m3d_interpolation_short::init(const unsigned int step, const short val1, const short val2)
 {
 	steps = (step > 0) ? step : 1;
-	start = val1 << 16;
-	val = val1 << 16;
+	val = start = val1 << 16;
 
-	delta = (int)(val2 - val1);
-	delta <<= 16;
-	delta /= steps;
+	if (steps == 1)
+	{
+		delta = 0;
+	}
+	else
+	{
+		delta = (int)(val2 - val1);
+		delta <<= 16;
+		delta /= (int)(this->steps - 1);
+	}
 }
 
 void m3d_interpolation_short::step()
@@ -96,54 +123,78 @@ void m3d_interpolation_short::valuearray(short *out)
 m3d_interpolation_color::m3d_interpolation_color(const unsigned int steps) : m3d_interpolation(steps)
 {
 	start.color = val.color = 0;
-	delta[0] = delta[1] = delta[2] = 0;
-	acc[0] = acc[1] = acc[2] = 0;
+	for (unsigned i = m3d_color::B_CHANNEL; i < m3d_color::A_CHANNEL; i++)
+	{
+		delta[i] = acc[i] = 0;
+	}
 }
 
 m3d_interpolation_color::m3d_interpolation_color(const unsigned int steps, m3d_color &val1, m3d_color &val2) : m3d_interpolation(steps)
 {
 	start.color = val.color = val1.getColor();
-	for (unsigned i = m3d_color::B_CHANNEL; i < m3d_color::A_CHANNEL; i++)
+
+	if (steps == 1)
 	{
-		if (val2.getChannel(i) >= val1.getChannel(i))
+		for (unsigned i = m3d_color::B_CHANNEL; i < m3d_color::A_CHANNEL; i++)
 		{
-			delta[i] = (unsigned)(val2.getChannel(i) - val1.getChannel(i));
-			delta[i] <<= 24;
-			delta[i] /= this->steps;
+			delta[i] = acc[i] = 0;
 		}
-		else
+	}
+	else
+	{
+		for (unsigned i = m3d_color::B_CHANNEL; i < m3d_color::A_CHANNEL; i++)
 		{
-			delta[i] = (unsigned)(val1.getChannel(i) - val2.getChannel(i));
-			delta[i] <<= 24;
-			delta[i] /= this->steps;
-			delta[i] = UINT_MAX - delta[i];
+			if (val2.getChannel(i) >= val1.getChannel(i))
+			{
+				delta[i] = (unsigned)(val2.getChannel(i) - val1.getChannel(i));
+				delta[i] <<= 24;
+				delta[i] /= (this->steps - 1);
+			}
+			else
+			{
+				delta[i] = (unsigned)(val1.getChannel(i) - val2.getChannel(i));
+				delta[i] <<= 24;
+				delta[i] /= (this->steps - 1);
+				delta[i] = UINT_MAX - delta[i];
+			}
+			acc[i] = (unsigned)val.channels[i] << 24;
+			acc[i] += 1U << 23;
 		}
-		acc[i] = (unsigned)val.channels[i] << 24;
-		acc[i] += 1U << 23;
 	}
 }
 
 void m3d_interpolation_color::init(const unsigned int step, m3d_color &val1, m3d_color &val2)
 {
 	steps = (step > 0) ? step : 1;
+
 	start.color = val.color = val1.getColor();
-	for (unsigned i = m3d_color::B_CHANNEL; i < m3d_color::A_CHANNEL; i++)
+	if (steps == 1)
 	{
-		if (val2.getChannel(i) >= val1.getChannel(i))
+		for (unsigned i = m3d_color::B_CHANNEL; i < m3d_color::A_CHANNEL; i++)
 		{
-			delta[i] = (unsigned)(val2.getChannel(i) - val1.getChannel(i));
-			delta[i] <<= 24;
-			delta[i] /= steps;
+			delta[i] = acc[i] = 0;
 		}
-		else
+	}
+	else
+	{
+		for (unsigned i = m3d_color::B_CHANNEL; i < m3d_color::A_CHANNEL; i++)
 		{
-			delta[i] = (unsigned)(val1.getChannel(i) - val2.getChannel(i));
-			delta[i] <<= 24;
-			delta[i] /= steps;
-			delta[i] = UINT_MAX - delta[i];
+			if (val2.getChannel(i) >= val1.getChannel(i))
+			{
+				delta[i] = (unsigned)(val2.getChannel(i) - val1.getChannel(i));
+				delta[i] <<= 24;
+				delta[i] /= (this->steps - 1);
+			}
+			else
+			{
+				delta[i] = (unsigned)(val1.getChannel(i) - val2.getChannel(i));
+				delta[i] <<= 24;
+				delta[i] /= (this->steps - 1);
+				delta[i] = UINT_MAX - delta[i];
+			}
+			acc[i] = (unsigned)val.channels[i] << 24;
+			acc[i] += 1U << 23;
 		}
-		acc[i] = (unsigned)val.channels[i] << 24;
-		acc[i] += 1U << 23;
 	}
 }
 
@@ -175,9 +226,16 @@ void m3d_interpolation_color::valuearray(uint32_t *out)
 
 m3d_interpolation_float_perspective::m3d_interpolation_float_perspective(const unsigned int steps, float z1, float z2, float val1, float val2) : m3d_interpolation(steps), val1(val1), val(val1)
 {
-	deltav = (val2 / z2 - val1 / z1) / (float)this->steps;
-	deltazinv = (1.0f / z2 - 1.0f / z1) / (float)this->steps;
-	z1inv = 1.0f / z1;
+	if (steps == 1)
+	{
+		deltav = deltazinv = z1inv = 0.0f;
+	}
+	else
+	{
+		deltav = (val2 / z2 - val1 / z1) / (float)(this->steps - 1);
+		deltazinv = (1.0f / z2 - 1.0f / z1) / (float)(this->steps - 1);
+		z1inv = 1.0f / z1;
+	}
 }
 
 void m3d_interpolation_float_perspective::step()
@@ -204,9 +262,16 @@ void m3d_interpolation_float_perspective::valuearray(float *out)
 
 m3d_interpolation_vector::m3d_interpolation_vector(const unsigned int steps, m3d_vector &v1, m3d_vector &v2) : m3d_interpolation(steps), vector1(v1), val(v1)
 {
-	deltavector.myvector[X_C] = (v2.myvector[X_C] - v1.myvector[X_C]) / (float)this->steps;
-	deltavector.myvector[Y_C] = (v2.myvector[Y_C] - v1.myvector[Y_C]) / (float)this->steps;
-	deltavector.myvector[Z_C] = (v2.myvector[Z_C] - v1.myvector[Z_C]) / (float)this->steps;
+	if (steps == 1)
+	{
+		deltavector.myvector[X_C] = deltavector.myvector[Y_C] = deltavector.myvector[Z_C] = deltavector.myvector[T_C] = 0.0f;
+	}
+	else
+	{
+		deltavector.myvector[X_C] = (v2.myvector[X_C] - v1.myvector[X_C]) / (float)(this->steps - 1);
+		deltavector.myvector[Y_C] = (v2.myvector[Y_C] - v1.myvector[Y_C]) / (float)(this->steps - 1);
+		deltavector.myvector[Z_C] = (v2.myvector[Z_C] - v1.myvector[Z_C]) / (float)(this->steps - 1);
+	}
 }
 
 void m3d_interpolation_vector::step()
@@ -231,11 +296,19 @@ void m3d_interpolation_vector::valuearray(m3d_vector *out)
 
 m3d_interpolation_vector_perspective::m3d_interpolation_vector_perspective(const unsigned int steps, float z1, float z2, m3d_vector &v1, m3d_vector &v2) : m3d_interpolation(steps), vector1(v1), val(v1)
 {
-	deltavector.myvector[X_C] = (v2.myvector[X_C] / z2 - v1.myvector[X_C] / z1) / (float)this->steps;
-	deltavector.myvector[Y_C] = (v2.myvector[Y_C] / z2 - v1.myvector[Y_C] / z1) / (float)this->steps;
-	deltavector.myvector[Z_C] = (v2.myvector[Z_C] / z2 - v1.myvector[Z_C] / z1) / (float)this->steps;
-	deltazinv = (1.0f / z2 - 1.0f / z1) / (float)this->steps;
-	z1inv = 1.0f / z1;
+	if (steps == 1)
+	{
+		deltavector.myvector[X_C] = deltavector.myvector[Y_C] = deltavector.myvector[Z_C] = deltavector.myvector[T_C] = 0.0f;
+		deltazinv = z1inv = 0.0f;
+	}
+	else
+	{
+		deltavector.myvector[X_C] = (v2.myvector[X_C] / z2 - v1.myvector[X_C] / z1) / (float)(this->steps - 1);
+		deltavector.myvector[Y_C] = (v2.myvector[Y_C] / z2 - v1.myvector[Y_C] / z1) / (float)(this->steps - 1);
+		deltavector.myvector[Z_C] = (v2.myvector[Z_C] / z2 - v1.myvector[Z_C] / z1) / (float)(this->steps - 1);
+		deltazinv = (1.0f / z2 - 1.0f / z1) / (float)(this->steps - 1);
+		z1inv = 1.0f / z1;
+	}
 }
 
 void m3d_interpolation_vector_perspective::step()
