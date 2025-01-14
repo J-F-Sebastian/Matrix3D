@@ -43,9 +43,9 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d
 	float p0 = vtx[0]->prjposition[Z_C];
 	float p1 = vtx[1]->prjposition[Z_C];
 	float p2 = vtx[2]->prjposition[Z_C];
-	float p3 = (float)vtx[0]->scrposition.x + 0.5f;
-	float p4 = (float)vtx[1]->scrposition.x + 0.5f;
-	float p5 = (float)vtx[2]->scrposition.x + 0.5f;
+	float p3 = (float)vtx[0]->scrposition.x;
+	float p4 = (float)vtx[1]->scrposition.x;
+	float p5 = (float)vtx[2]->scrposition.x;
 	unsigned runlen0 = (unsigned)(vtx[2]->scrposition.y - vtx[0]->scrposition.y + 1);
 	unsigned runlen1 = (unsigned)(vtx[1]->scrposition.y - vtx[0]->scrposition.y + 1);
 	unsigned runlen2 = (unsigned)(vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1);
@@ -55,56 +55,44 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d
 	float *lzscanline, *rzscanline;
 	m3d_vector *lvscanline, *rvscanline;
 	m3d_point *lwscanline, *rwscanline;
-	float lgradient = (p5 - p3) / (float)runlen0;
-	float rgradient = (p4 - p3) / (float)runlen1;
 
+	store_fscanlines(runlen0, p3, p5);
+	store_fscanlines(runlen1, p3, p4, runlen0);
+	store_fscanlines(runlen2, p4, p5, runlen0 + runlen1 - 1);
+	store_zscanlines(runlen0, p0, p2);
+	store_zscanlines(runlen1, p0, p1, runlen0);
+	store_zscanlines(runlen2, p1, p2, runlen0 + runlen1 - 1);
+	store_vscanlines(runlen0, *vtx[0], *vtx[2]);
+	store_vscanlines(runlen1, *vtx[0], *vtx[1], runlen0);
+	store_vscanlines(runlen2, *vtx[1], *vtx[2], runlen0 + runlen1 - 1);
+	store_wscanlines(runlen0, *vtx[0], *vtx[2]);
+	store_wscanlines(runlen1, *vtx[0], *vtx[1], runlen0);
+	store_wscanlines(runlen2, *vtx[1], *vtx[2], runlen0 + runlen1 - 1);
+
+	lscanline = rscanline = fscanline;
+	lzscanline = rzscanline = zscanline;
+	lvscanline = rvscanline = vscanline;
+	lwscanline = rwscanline = wscanline;
 	/*
-	 * check x values to understand who's the left half and who's the right
+	 * check x values to understand who's the left side and who's the right side.
+	 * runlen1 - 1 is the position of the scanline passing through point 1, the middle
+	 * point of the triangle projected to screen.
 	 */
-	/*
-	 * Draws a horizontal line from first half of points to second half.
-	 * If lgradient is less than or equal to rgradient then the left side
-	 * is longest.
-	 */
-	if (lgradient <= rgradient)
+	if (fscanline[runlen1 - 1] <= fscanline[runlen0 + runlen1 - 1])
 	{
-		store_fscanlines(runlen0, p3, p5);
-		store_fscanlines(runlen1, p3, p4, runlen0);
-		store_fscanlines(runlen2, p4, p5, runlen0 + runlen1 - 1);
-		store_zscanlines(runlen0, p0, p2);
-		store_zscanlines(runlen1, p0, p1, runlen0);
-		store_zscanlines(runlen2, p1, p2, runlen0 + runlen1 - 1);
-		store_vscanlines(runlen0, *vtx[0], *vtx[2]);
-		store_vscanlines(runlen1, *vtx[0], *vtx[1], runlen0);
-		store_vscanlines(runlen2, *vtx[1], *vtx[2], runlen0 + runlen1 - 1);
-		store_wscanlines(runlen0, *vtx[0], *vtx[2]);
-		store_wscanlines(runlen1, *vtx[0], *vtx[1], runlen0);
-		store_wscanlines(runlen2, *vtx[1], *vtx[2], runlen0 + runlen1 - 1);
+		rscanline += runlen0;
+		rzscanline += runlen0;
+		rvscanline += runlen0;
+		rwscanline += runlen0;
 	}
 	else
 	{
-		store_fscanlines(runlen1, p3, p4);
-		store_fscanlines(runlen2, p4, p5, runlen1 - 1);
-		store_fscanlines(runlen0, p3, p5, runlen1 + runlen2 - 1);
-		store_zscanlines(runlen1, p0, p1);
-		store_zscanlines(runlen2, p1, p2, runlen1 - 1);
-		store_zscanlines(runlen0, p0, p2, runlen1 + runlen2 - 1);
-		store_vscanlines(runlen1, *vtx[0], *vtx[1]);
-		store_vscanlines(runlen2, *vtx[1], *vtx[2], runlen1 - 1);
-		store_vscanlines(runlen0, *vtx[0], *vtx[2], runlen1 + runlen2 - 1);
-		store_wscanlines(runlen1, *vtx[0], *vtx[1]);
-		store_wscanlines(runlen2, *vtx[1], *vtx[2], runlen1 - 1);
-		store_wscanlines(runlen0, *vtx[0], *vtx[2], runlen1 + runlen2 - 1);
+		lscanline += runlen0;
+		lzscanline += runlen0;
+		lvscanline += runlen0;
+		lwscanline += runlen0;
 	}
 
-	lscanline = fscanline;
-	rscanline = fscanline + runlen0;
-	lzscanline = zscanline;
-	rzscanline = zscanline + runlen0;
-	lvscanline = vscanline;
-	rvscanline = vscanline + runlen0;
-	lwscanline = wscanline;
-	rwscanline = wscanline + runlen0;
 	while (runlen0--)
 	{
 		fillrunlen = (unsigned)lroundf(*rscanline - *lscanline) + 1;
