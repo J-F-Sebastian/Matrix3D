@@ -62,23 +62,19 @@ void m3d_illumination::diffuse_lighting(m3d_vertex &vtx, m3d_render_object &obj,
 void m3d_illumination::specular_lighting(m3d_vertex &vtx, m3d_render_object &obj, m3d_world &world, struct m3d_render_color &out)
 {
 	float lightint = 0.0f;
-	m3d_vector vtxworld(vtx.tposition);
-	m3d_point cam;
-	world.camera.get_position(cam);
 	m3d_vector V(vtx.tposition);
-	V.subtract(cam);
 	// Now we sum all specular contributions considering light position w.r.t. vtx position and the surface normal.
 	for (auto lights : world.lights_list)
 	{
 		m3d_vector L(lights->position);
-		L.subtract(vtxworld);
+		L.subtract(V);
 		// Halfway vector H
-		m3d_vector H(L + V);
+		m3d_vector H(L - V);
 		H.normalize();
 		L.normalize();
 		if (vtx.tnormal.dot_product(L) > 0.0f)
 		{
-			float dot = L.dot_product(vtx.tnormal);
+			float dot = H.dot_product(vtx.tnormal);
 			// We hardcoded a value of p = 8 but this should be dynamic....
 			dot *= dot;
 			dot *= dot;
