@@ -133,7 +133,7 @@ m3d_interpolation_color::m3d_interpolation_color(const unsigned int steps, m3d_c
 {
 	start.color = val.color = val1.getColor();
 
-	if (steps == 1)
+	if (this->steps == 1)
 	{
 		for (unsigned i = m3d_color::B_CHANNEL; i < m3d_color::A_CHANNEL; i++)
 		{
