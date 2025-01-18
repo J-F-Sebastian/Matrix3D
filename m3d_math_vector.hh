@@ -110,6 +110,13 @@ public:
                 return ret; // return the result by value (uses move constructor)
         }
 
+        friend m3d_vector operator-(const m3d_vector &veca, const m3d_vector &vecb)
+        {
+                m3d_vector ret(veca);
+                ret.subtract(vecb);
+                return ret; // return the result by value (uses move constructor)
+        }
+
         /*
          * perform cross product myvector X veca and store the result in myvector.
          * NOTE: the value of myvector is altered.
