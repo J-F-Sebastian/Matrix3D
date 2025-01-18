@@ -204,10 +204,9 @@ int main(int argc, char *argv[])
 
 	renderer[0] = new m3d_renderer_wireframe(&display);
 	renderer[1] = new m3d_renderer_flat(&display);
-	renderer[2] = new m3d_renderer_flatf(&display);
-	renderer[3] = new m3d_renderer_shaded(&display);
-	renderer[4] = new m3d_renderer_shaded_gouraud(&display);
-	renderer[5] = new m3d_renderer_shaded_phong(&display);
+	renderer[2] = new m3d_renderer_shaded(&display);
+	renderer[3] = new m3d_renderer_shaded_gouraud(&display);
+	renderer[4] = new m3d_renderer_shaded_phong(&display);
 	cubeo.create(cube, NELEMENTS(cube), cubemesh, NELEMENTS(cubemesh), cubecolor);
 	cubeo2.create(cube, NELEMENTS(cube), cubemesh, NELEMENTS(cubemesh), cubecolor2);
 	cubeo3.create(cube, NELEMENTS(cube), cubemesh, NELEMENTS(cubemesh), cubecolor3);
@@ -323,7 +322,7 @@ int main(int argc, char *argv[])
 				break;
 			case SDLK_r:
 				renderer_index++;
-				if (renderer_index > 5)
+				if (renderer_index > 4)
 					renderer_index = 0;
 				break;
 			case SDLK_ESCAPE:
