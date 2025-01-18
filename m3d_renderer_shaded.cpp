@@ -61,7 +61,7 @@ void m3d_renderer_shaded::render(m3d_world &world)
 
 void m3d_renderer_shaded::store_iscanlines(unsigned runlen, float z1, float z2, float val1, float val2, unsigned start)
 {
-	m3d_interpolation_float_perspective run(runlen, val1, val2, z1, z2);
+	m3d_interpolation_float_perspective run(runlen, z1, z2, val1, val2);
 	run.valuearray(iscanline + start);
 }
 
@@ -72,9 +72,9 @@ void m3d_renderer_shaded::triangle_fill_shaded(m3d_render_object &obj, m3d_verte
 	float p0 = vtx[0]->prjposition[Z_C];
 	float p1 = vtx[1]->prjposition[Z_C];
 	float p2 = vtx[2]->prjposition[Z_C];
-	float p3 = (float)vtx[0]->scrposition.x;
-	float p4 = (float)vtx[1]->scrposition.x;
-	float p5 = (float)vtx[2]->scrposition.x;
+	int16_t p3 = (int16_t)vtx[0]->scrposition.x;
+	int16_t p4 = (int16_t)vtx[1]->scrposition.x;
+	int16_t p5 = (int16_t)vtx[2]->scrposition.x;
 	float i0 = colors[0].ambint + colors[0].diffint;
 	float i1 = colors[1].ambint + colors[1].diffint;
 	float i2 = colors[2].ambint + colors[2].diffint;
@@ -83,13 +83,13 @@ void m3d_renderer_shaded::triangle_fill_shaded(m3d_render_object &obj, m3d_verte
 	unsigned runlen2 = (unsigned)(vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1);
 	int fillrunlen;
 	int16_t y = (int16_t)vtx[0]->scrposition.y;
-	float *lscanline, *rscanline;
+	int16_t *lscanline, *rscanline;
 	float *lzscanline, *rzscanline;
 	float *liscanline, *riscanline;
 
-	store_fscanlines(runlen0, p3, p5);
-	store_fscanlines(runlen1, p3, p4, runlen0);
-	store_fscanlines(runlen2, p4, p5, runlen0 + runlen1 - 1);
+	store_scanlines(runlen0, p3, p5);
+	store_scanlines(runlen1, p3, p4, runlen0);
+	store_scanlines(runlen2, p4, p5, runlen0 + runlen1 - 1);
 	store_zscanlines(runlen0, p0, p2);
 	store_zscanlines(runlen1, p0, p1, runlen0);
 	store_zscanlines(runlen2, p1, p2, runlen0 + runlen1 - 1);
@@ -97,7 +97,7 @@ void m3d_renderer_shaded::triangle_fill_shaded(m3d_render_object &obj, m3d_verte
 	store_iscanlines(runlen1, p0, p1, i0, i1, runlen0);
 	store_iscanlines(runlen2, p1, p2, i0, i2, runlen0 + runlen1 - 1);
 
-	lscanline = rscanline = fscanline;
+	lscanline = rscanline = scanline;
 	lzscanline = rzscanline = zscanline;
 	liscanline = riscanline = iscanline;
 	/*
@@ -105,7 +105,7 @@ void m3d_renderer_shaded::triangle_fill_shaded(m3d_render_object &obj, m3d_verte
 	 * runlen1 - 1 is the position of the scanline passing through point 1, the middle
 	 * point of the triangle projected to screen.
 	 */
-	if (fscanline[runlen1 - 1] <= fscanline[runlen0 + runlen1 - 1])
+	if (scanline[runlen1 - 1] <= scanline[runlen0 + runlen1 - 1])
 	{
 		rscanline += runlen0;
 		rzscanline += runlen0;
@@ -120,22 +120,19 @@ void m3d_renderer_shaded::triangle_fill_shaded(m3d_render_object &obj, m3d_verte
 
 	while (runlen0--)
 	{
-		fillrunlen = lroundf(*rscanline - *lscanline) + 1;
-		if (fillrunlen)
+		fillrunlen = *rscanline - *lscanline + 1;
+		m3d_interpolation_float_perspective sl(fillrunlen, *lzscanline, *rzscanline, *liscanline, *riscanline);
+		output = display->get_video_buffer(*lscanline, y);
+		outz = zbuffer.get_zbuffer(*lscanline, y);
+		while (sl.finished() == false)
 		{
-			m3d_interpolation_float_perspective sl(fillrunlen, *lzscanline, *rzscanline, *liscanline, *riscanline);
-			output = display->get_video_buffer((int16_t)truncf(*lscanline), y);
-			outz = zbuffer.get_zbuffer((int16_t)truncf(*lscanline), y);
-			while (sl.finished() == false)
+			if (zbuffer.test_update(outz, sl.value()))
 			{
-				if (zbuffer.test_update(outz, sl.value()))
-				{
-					*output = colors[0].Kdiff.brighten2(sl.value());
-				}
-				++output;
-				++outz;
-				sl.step();
+				*output = colors[0].Kdiff.brighten2(sl.value());
 			}
+			++output;
+			++outz;
+			sl.step();
 		}
 		lscanline++;
 		rscanline++;

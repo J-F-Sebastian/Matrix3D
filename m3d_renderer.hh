@@ -44,43 +44,36 @@ protected:
 	m3d_display *display;
 	// The scanline buffer
 	int16_t *scanline;
-	float *fscanline;
-	// The scanline depth buffer
+	//  The scanline depth buffer (Z values for Z buffer)
 	float *zscanline;
-	// Z buffer
+	// The Z buffer
 	m3d_zbuffer zbuffer;
 	// The list of visible objects
 	std::list<m3d_render_object *> vislist;
 
 	/*
 	 * Sorts an array of 3 points composing a triangle.
-	 * Y is the Y on-screen coordinate of the 3 vertices of the triangle.
 	 * The triangle is geometrically unchanged, its vertices are sorted in descending order
 	 * (top of screen to bottom of screen).
-	 * */
+	 * Sorting is performed using screen coordinates, i.e. integer values representing
+	 * projected 3D points onto the screen, perspective corrected.
+	 * The 2 parameter variant sorts also a color array, it is up to the caller to
+	 * setup the array, matching positions in vtx and colors.
+	 */
 	void sort_triangle(m3d_vertex *vtx[3]);
 	void sort_triangle(m3d_vertex *vtx[3], struct m3d_render_color *colors);
 
 	/*
-	 * Store scanlines into the scanline buffer, starting at position start inside the buffer.
-	 * The scanline buffer carries the X coordinates of every linecomposing the polygon
+	 * Store scanlines into the float fscanline buffer, starting at position 'start' inside the buffer.
+	 * The scanline buffer carries the X coordinates of every line composing the polygon
 	 * to be filled with horizontal lines (scan lines!).
 	 * The Y coordinates are implicitely starting at the lowest y0, i.e. the caller MUST know
 	 * the coordinates of the points composing the polygon and how they are sorted.
 	 */
-	int16_t store_scanlines(int16_t x0, int16_t y0, int16_t x1, int16_t y1, unsigned start = 0);
+	void store_scanlines(unsigned runlen, int16_t val1, int16_t val2, unsigned start = 0);
 
 	/*
-	 * Store scanlines into the float fscanline buffer, starting at position start inside the buffer.
-	 * The fscanline buffer carries the X coordinates of every linecomposing the polygon
-	 * to be filled with horizontal lines (scan lines!).
-	 * The Y coordinates are implicitely starting at the lowest y0, i.e. the caller MUST know
-	 * the coordinates of the points composing the polygon and how they are sorted.
-	 */
-	void store_fscanlines(unsigned runlen, float val1, float val2, unsigned start = 0);
-
-	/*
-	 * Store scanlines into the float zscanline buffer, starting at position start inside the buffer.
+	 * Store scanlines into the float zscanline buffer, starting at position 'start' inside the buffer.
 	 * The zscanline buffer carries the Z homogeneous coordinates of every linecomposing the polygon
 	 * to be filled with horizontal lines (scan lines!).
 	 * The Y coordinates are implicitely starting at the lowest y0, i.e. the caller MUST know
@@ -88,8 +81,17 @@ protected:
 	 */
 	void store_zscanlines(unsigned runlen, float val1, float val2, unsigned start = 0);
 
+	/*
+	 * Return a pointer to the video memory buffer corresponding to screen coordinates (x0, y0)
+	 */
 	uint32_t *get_video_buffer(int16_t x0, int16_t y0);
 
+	/*
+	 * Perform several algorithms.
+	 * Clears the visible objects list, then perform projection of all objects found in 'world'.
+	 * If any face of an object is visible, then the object is stored in the visible objects list.
+	 * The visible objects list is then sorted back to front and the Z buffer is reset.
+	 */
 	void compute_visible_list_and_sort(m3d_world &world);
 };
 

@@ -37,9 +37,9 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m
 	float p0 = vtx[0]->prjposition[Z_C];
 	float p1 = vtx[1]->prjposition[Z_C];
 	float p2 = vtx[2]->prjposition[Z_C];
-	float p3 = (float)vtx[0]->scrposition.x;
-	float p4 = (float)vtx[1]->scrposition.x;
-	float p5 = (float)vtx[2]->scrposition.x;
+	int16_t p3 = (int16_t)vtx[0]->scrposition.x;
+	int16_t p4 = (int16_t)vtx[1]->scrposition.x;
+	int16_t p5 = (int16_t)vtx[2]->scrposition.x;
 	unsigned runlen0 = (unsigned)(vtx[2]->scrposition.y - vtx[0]->scrposition.y + 1);
 	unsigned runlen1 = (unsigned)(vtx[1]->scrposition.y - vtx[0]->scrposition.y + 1);
 	unsigned runlen2 = (unsigned)(vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1);
@@ -48,13 +48,13 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m
 	m3d_color c2 = colors[2].Kamb + colors[2].Kdiff;
 	unsigned int fillrunlen;
 	int16_t y = (int16_t)vtx[0]->scrposition.y;
-	float *lscanline, *rscanline;
+	int16_t *lscanline, *rscanline;
 	float *lzscanline, *rzscanline;
 	uint32_t *lcscanline, *rcscanline;
 
-	store_fscanlines(runlen0, p3, p5);
-	store_fscanlines(runlen1, p3, p4, runlen0);
-	store_fscanlines(runlen2, p4, p5, runlen0 + runlen1 - 1);
+	store_scanlines(runlen0, p3, p5);
+	store_scanlines(runlen1, p3, p4, runlen0);
+	store_scanlines(runlen2, p4, p5, runlen0 + runlen1 - 1);
 	store_zscanlines(runlen0, p0, p2);
 	store_zscanlines(runlen1, p0, p1, runlen0);
 	store_zscanlines(runlen2, p1, p2, runlen0 + runlen1 - 1);
@@ -62,7 +62,7 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m
 	store_cscanlines(runlen1, c0, c1, runlen0);
 	store_cscanlines(runlen2, c1, c2, runlen0 + runlen1 - 1);
 
-	lscanline = rscanline = fscanline;
+	lscanline = rscanline = scanline;
 	lzscanline = rzscanline = zscanline;
 	lcscanline = rcscanline = cscanline;
 	/*
@@ -70,7 +70,7 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m
 	 * runlen1 - 1 is the position of the scanline passing through point 1, the middle
 	 * point of the triangle projected to screen.
 	 */
-	if (fscanline[runlen1 - 1] <= fscanline[runlen0 + runlen1 - 1])
+	if (scanline[runlen1 - 1] <= scanline[runlen0 + runlen1 - 1])
 	{
 		rscanline += runlen0;
 		rzscanline += runlen0;
@@ -85,25 +85,22 @@ void m3d_renderer_shaded_gouraud::triangle_fill_shaded(m3d_render_object &obj, m
 
 	while (runlen0--)
 	{
-		fillrunlen = (unsigned)lroundf(*rscanline - *lscanline) + 1;
-		if (fillrunlen)
+		fillrunlen = *rscanline - *lscanline + 1;
+		m3d_interpolation_float sl(fillrunlen, *lzscanline, *rzscanline);
+		m3d_color ca(*lcscanline), cb(*rcscanline);
+		m3d_interpolation_color lint(fillrunlen, ca, cb);
+		output = display->get_video_buffer(*lscanline, y);
+		outz = zbuffer.get_zbuffer(*lscanline, y);
+		while (sl.finished() == false)
 		{
-			m3d_interpolation_float sl(fillrunlen, *lzscanline, *rzscanline);
-			m3d_color ca(*lcscanline), cb(*rcscanline);
-			m3d_interpolation_color lint(fillrunlen, ca, cb);
-			output = display->get_video_buffer((int16_t)truncf(*lscanline), y);
-			outz = zbuffer.get_zbuffer((int16_t)truncf(*lscanline), y);
-			while (sl.finished() == false)
+			if (zbuffer.test_update(outz, sl.value()))
 			{
-				if (zbuffer.test_update(outz, sl.value()))
-				{
-					*output = lint.value();
-				}
-				++output;
-				++outz;
-				sl.step();
-				lint.step();
+				*output = lint.value();
 			}
+			++output;
+			++outz;
+			sl.step();
+			lint.step();
 		}
 		lscanline++;
 		rscanline++;

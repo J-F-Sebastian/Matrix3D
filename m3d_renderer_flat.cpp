@@ -84,32 +84,32 @@ void m3d_renderer_flat::triangle_fill_flat(m3d_vertex *vtx[], m3d_color &color)
 	float p0 = vtx[0]->prjposition[Z_C];
 	float p1 = vtx[1]->prjposition[Z_C];
 	float p2 = vtx[2]->prjposition[Z_C];
-	float p3 = (float)vtx[0]->scrposition.x;
-	float p4 = (float)vtx[1]->scrposition.x;
-	float p5 = (float)vtx[2]->scrposition.x;
+	int16_t p3 = (int16_t)vtx[0]->scrposition.x;
+	int16_t p4 = (int16_t)vtx[1]->scrposition.x;
+	int16_t p5 = (int16_t)vtx[2]->scrposition.x;
 	unsigned runlen0 = (unsigned)(vtx[2]->scrposition.y - vtx[0]->scrposition.y + 1);
 	unsigned runlen1 = (unsigned)(vtx[1]->scrposition.y - vtx[0]->scrposition.y + 1);
 	unsigned runlen2 = (unsigned)(vtx[2]->scrposition.y - vtx[1]->scrposition.y + 1);
 	int fillrunlen;
 	int16_t y = (int16_t)vtx[0]->scrposition.y;
-	float *lscanline, *rscanline;
+	int16_t *lscanline, *rscanline;
 	float *lzscanline, *rzscanline;
 
-	store_fscanlines(runlen0, p3, p5);
-	store_fscanlines(runlen1, p3, p4, runlen0);
-	store_fscanlines(runlen2, p4, p5, runlen0 + runlen1 - 1);
+	store_scanlines(runlen0, p3, p5);
+	store_scanlines(runlen1, p3, p4, runlen0);
+	store_scanlines(runlen2, p4, p5, runlen0 + runlen1 - 1);
 	store_zscanlines(runlen0, p0, p2);
 	store_zscanlines(runlen1, p0, p1, runlen0);
 	store_zscanlines(runlen2, p1, p2, runlen0 + runlen1 - 1);
 
-	lscanline = rscanline = fscanline;
+	lscanline = rscanline = scanline;
 	lzscanline = rzscanline = zscanline;
 	/*
 	 * check x values to understand who's the left side and who's the right side.
 	 * runlen1 - 1 is the position of the scanline passing through point 1, the middle
 	 * point of the triangle projected to screen.
 	 */
-	if (fscanline[runlen1 - 1] <= fscanline[runlen0 + runlen1 - 1])
+	if (scanline[runlen1 - 1] <= scanline[runlen0 + runlen1 - 1])
 	{
 		rscanline += runlen0;
 		rzscanline += runlen0;
@@ -122,10 +122,10 @@ void m3d_renderer_flat::triangle_fill_flat(m3d_vertex *vtx[], m3d_color &color)
 
 	while (runlen0--)
 	{
-		fillrunlen = lroundf(*rscanline - *lscanline) + 1;
+		fillrunlen = *rscanline - *lscanline + 1;
 		m3d_interpolation_float sl(fillrunlen, *lzscanline, *rzscanline);
-		output = display->get_video_buffer((int16_t)truncf(*lscanline), y);
-		outz = zbuffer.get_zbuffer((int16_t)truncf(*lscanline), y);
+		output = display->get_video_buffer(*lscanline, y);
+		outz = zbuffer.get_zbuffer(*lscanline, y);
 		while (sl.finished() == false)
 		{
 			if (zbuffer.test_update(outz, sl.value()))
