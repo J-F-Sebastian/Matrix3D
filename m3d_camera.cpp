@@ -70,8 +70,8 @@ void m3d_camera::projection(m3d_vector &vecsrc, m3d_vector &vectdst)
 
 void m3d_camera::to_screen(m3d_point &point, SDL_Point &pix)
 {
-	pix.x = lroundf((point[X_C] + 1.0f) * screen_resolution.x) / 2;
-	pix.y = lroundf((-point[Y_C] + 1.0f) * screen_resolution.y) / 2;
+	pix.x = (int)floorf((point[X_C] + 1.0f) * screen_resolution.x / 2);
+	pix.y = (int)floorf((-point[Y_C] + 1.0f) * screen_resolution.y / 2);
 }
 
 void m3d_camera::projection_to_screen(m3d_point &pointsrc, m3d_point &pointdst, SDL_Point &pix)
