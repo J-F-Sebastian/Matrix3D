@@ -6,3 +6,4 @@ matrix3ddbg/*
 *.exe
 *.pdb
 *.ilk
+doxygen/*
