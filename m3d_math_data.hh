@@ -63,4 +63,10 @@ struct m3d_input_point
 #endif
 };
 
+struct m3d_display_point
+{
+        int x;
+        int y;
+};
+
 #endif
