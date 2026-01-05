@@ -20,8 +20,6 @@
 #ifndef M3D_VERTEX_H
 #define M3D_VERTEX_H
 
-#include <SDL.h>
-
 #include "m3d_math.hh"
 
 class m3d_vertex
@@ -63,7 +61,7 @@ public:
 	/*
 	 * Screen coordinates for prjposition.
 	 */
-	SDL_Point scrposition;
+	m3d_display_point scrposition;
 };
 
 #endif // M3D_VERTEX_H

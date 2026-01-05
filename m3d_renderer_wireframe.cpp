@@ -27,7 +27,7 @@ void m3d_renderer_wireframe::render(m3d_world &world)
 {
 	m3d_point temp;
 	m3d_color ctemp;
-	SDL_Point toscreen[M3D_MAX_TRIANGLES * 3];
+	m3d_display_point toscreen[M3D_MAX_TRIANGLES * 3];
 	unsigned i, j, k;
 
 	// Compute visible objects

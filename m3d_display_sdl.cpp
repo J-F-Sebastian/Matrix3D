@@ -23,7 +23,7 @@ using namespace std;
 
 #include "m3d_display.hh"
 
-m3d_display::m3d_display(int xres, int yres)
+m3d_display_sdl::m3d_display_sdl(int xres, int yres) : m3d_display(xres, yres)
 {
 	SDL_version linked;
 	SDL_DisplayMode mode;
@@ -118,47 +118,47 @@ m3d_display::m3d_display(int xres, int yres)
 }
 
 /** Default destructor */
-m3d_display::~m3d_display()
+m3d_display_sdl::~m3d_display_sdl()
 {
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 }
 
-uint32_t *m3d_display::get_video_buffer(int16_t x0, int16_t y0)
+uint32_t *m3d_display_sdl::get_video_buffer(int x0, int y0)
 {
 	return (uint32_t *)(screenSurface->pixels) + (y0 * screenSurface->w) + x0;
 }
 
-void m3d_display::set_color(uint8_t red, uint8_t green, uint8_t blue)
+void m3d_display_sdl::set_color(uint8_t red, uint8_t green, uint8_t blue)
 {
 	SDL_SetRenderDrawColor(renderer, red, green, blue, SDL_ALPHA_OPAQUE);
 }
 
-void m3d_display::fill_buffer()
+void m3d_display_sdl::fill_buffer()
 {
 	SDL_RenderClear(renderer);
 }
 
-void m3d_display::show_buffer()
+void m3d_display_sdl::show_buffer()
 {
 	// Present the buffer
 	SDL_UpdateWindowSurface(window);
 }
 
-void m3d_display::clear_buffer()
+void m3d_display_sdl::clear_buffer()
 {
 	SDL_FillRect(screenSurface, &screenSurface->clip_rect, 0);
 }
 
-void m3d_display::clear_renderer()
+void m3d_display_sdl::clear_renderer()
 {
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 	SDL_RenderClear(renderer);
 	SDL_RenderPresent(renderer);
 }
 
-void m3d_display::draw_lines(SDL_Point pts[], unsigned ptsnum)
+void m3d_display_sdl::draw_lines(m3d_display_point pts[], unsigned ptsnum)
 {
 	if (SDL_RenderDrawLines(renderer, pts, ptsnum) < 0)
 	{
@@ -166,7 +166,7 @@ void m3d_display::draw_lines(SDL_Point pts[], unsigned ptsnum)
 	}
 }
 
-void m3d_display::show_renderer()
+void m3d_display_sdl::show_renderer()
 {
 	// Present the rendered lines
 	SDL_RenderPresent(renderer);
