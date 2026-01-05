@@ -22,7 +22,6 @@
 
 #include <vector>
 #include <bitset>
-#include <SDL.h>
 
 #include "m3d_vertex.hh"
 #include "m3d_color.hh"

@@ -20,8 +20,6 @@
 #ifndef M3D_RENDERER_H
 #define M3D_RENDERER_H
 
-#include <SDL.h>
-
 #include "m3d_display.hh"
 #include "m3d_world.hh"
 #include "m3d_zbuffer.hh"
