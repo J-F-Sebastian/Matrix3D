@@ -164,17 +164,17 @@ void m3d_display_wingdi::draw_lines(struct m3d_display_point pts[], unsigned pts
 
 	if (SelectObject(hdcDIB, pen))
 	{
-		MoveToEx(hdcDIB, pts[0].x, pts[0].y, NULL);
-
-		for (unsigned i = 1; i < ptsnum; i++)
+		for (unsigned i = 0; i < ptsnum; i += 4)
 		{
-			LineTo(hdcDIB, pts[i].x, pts[i].y);
+			MoveToEx(hdcDIB, pts[i].x, pts[i].y, NULL);
+			LineTo(hdcDIB, pts[i + 1].x, pts[i + 1].y);
+			LineTo(hdcDIB, pts[i + 2].x, pts[i + 2].y);
+			LineTo(hdcDIB, pts[i + 3].x, pts[i + 3].y);
 		}
-
-		if (!DeleteObject(pen))
-		{
-			cerr << "Could not delete the pen!" << endl;
-		}
+	}
+	if (!DeleteObject(pen))
+	{
+		cerr << "Could not delete the pen!" << endl;
 	}
 }
 
