@@ -22,7 +22,9 @@
 
 #include "m3d_renderer_shaded.hh"
 
-// Phong shading renderer
+/*
+ * PHONG SHADING RENDERER
+ */
 class m3d_renderer_shaded_phong : public m3d_renderer_shaded
 {
 public:

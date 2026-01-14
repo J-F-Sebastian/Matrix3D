@@ -22,6 +22,7 @@
 
 /*
  * SHADED RENDERER, WITH 1/z INTERPOLATION
+ * perspective correct shading
  */
 
 void m3d_renderer_shaded::render(m3d_world &world)

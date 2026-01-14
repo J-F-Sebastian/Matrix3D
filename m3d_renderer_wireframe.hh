@@ -22,6 +22,9 @@
 
 #include "m3d_renderer.hh"
 
+/*
+ * WIREFRAME RENDERING
+ */
 class m3d_renderer_wireframe : public m3d_renderer
 {
 public:

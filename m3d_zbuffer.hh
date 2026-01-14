@@ -22,6 +22,12 @@
 
 #include <cstdint>
 
+/*
+ * ZBuffer class for 3D rendering.
+ * This class manages a depth buffer to handle visibility of pixels in 3D space.
+ * It provides methods to reset the buffer, test and update depth values.
+ * This implementation use float values.
+ */
 class m3d_zbuffer
 {
 public:
@@ -43,18 +49,32 @@ public:
 		for (int i = 0; i < size; i++)
 			zbuffer[i] = 1.0f;
 	}
-
+	/*
+	 * Tests and updates the z-buffer at the specified coordinates.
+	 *
+	 * Parameters:
+	 * x0 - The x-coordinate in the z-buffer.
+	 * y0 - The y-coordinate in the z-buffer.
+	 * z  - The depth value to test and potentially update.
+	 * Returns:
+	 * true if the z-buffer was updated (the new depth is closer), false otherwise.
+	 * false otherwise.
+	 */
 	bool test_update(int16_t x0, int16_t y0, float z)
 	{
 		float *zb = get_zbuffer(x0, y0);
-		if (z <= *zb)
-		{
-			*zb = z;
-			return true;
-		}
-		return false;
+		return test_update(zb, z);
 	}
-
+	/*
+	 * Tests and updates the z-buffer at the specified coordinates.
+	 *
+	 * Parameters:
+	 * zbuf - The pointer to the z-buffer element.
+	 * z  - The depth value to test and potentially update.
+	 * Returns:
+	 * true if the z-buffer was updated (the new depth is closer), false otherwise.
+	 * false otherwise.
+	 */
 	bool test_update(float *zbuf, float z)
 	{
 		if (z <= *zbuf)

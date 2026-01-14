@@ -22,7 +22,11 @@
 
 #include "m3d_renderer.hh"
 
-// Perspective-correct shading renderer
+/*
+ * SHADED RENDERER, WITH 1/z INTERPOLATION
+ * perspective correct shading
+ */
+
 class m3d_renderer_shaded : public m3d_renderer
 {
 public:

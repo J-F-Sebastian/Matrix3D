@@ -22,7 +22,9 @@
 
 #include "m3d_renderer_shaded.hh"
 
-// Gouraud shading renderer
+/*
+ * GOURAUD SHADING RENDERER
+ */
 class m3d_renderer_shaded_gouraud : public m3d_renderer_shaded
 {
 public:
