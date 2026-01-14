@@ -27,8 +27,9 @@ void m3d_renderer_wireframe::render(m3d_world &world)
 {
 	m3d_point temp;
 	m3d_color ctemp;
-	m3d_display_point toscreen[M3D_MAX_TRIANGLES * 3];
+	m3d_display_point *toscreen = new m3d_display_point[1 * 4];
 	unsigned i, j, k;
+	size_t meshsize = 1;
 
 	// Compute visible objects
 	compute_visible_list_and_sort(world);
@@ -41,6 +42,13 @@ void m3d_renderer_wireframe::render(m3d_world &world)
 		display->set_color(ctemp.getChannel(m3d_color::R_CHANNEL),
 				   ctemp.getChannel(m3d_color::G_CHANNEL),
 				   ctemp.getChannel(m3d_color::B_CHANNEL));
+
+		if (itro->mesh.size() > meshsize)
+		{
+			meshsize = itro->mesh.size();
+			delete toscreen;
+			toscreen = new m3d_display_point[meshsize * 4]; // 4 = 3 vertices + 1 to close the loop
+		}
 
 		i = k = 0;
 		for (auto &triangle : itro->mesh)
@@ -60,4 +68,5 @@ void m3d_renderer_wireframe::render(m3d_world &world)
 
 	// Present the rendered lines
 	display->show_renderer();
+	delete[] toscreen;
 }
