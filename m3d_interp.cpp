@@ -271,6 +271,7 @@ m3d_interpolation_vector::m3d_interpolation_vector(const unsigned int steps, m3d
 		deltavector.myvector[X_C] = (v2.myvector[X_C] - v1.myvector[X_C]) / (float)(this->steps - 1);
 		deltavector.myvector[Y_C] = (v2.myvector[Y_C] - v1.myvector[Y_C]) / (float)(this->steps - 1);
 		deltavector.myvector[Z_C] = (v2.myvector[Z_C] - v1.myvector[Z_C]) / (float)(this->steps - 1);
+		deltavector.myvector[T_C] = 0.0f;
 	}
 }
 
@@ -306,6 +307,7 @@ m3d_interpolation_vector_perspective::m3d_interpolation_vector_perspective(const
 		deltavector.myvector[X_C] = (v2.myvector[X_C] / z2 - v1.myvector[X_C] / z1) / (float)(this->steps - 1);
 		deltavector.myvector[Y_C] = (v2.myvector[Y_C] / z2 - v1.myvector[Y_C] / z1) / (float)(this->steps - 1);
 		deltavector.myvector[Z_C] = (v2.myvector[Z_C] / z2 - v1.myvector[Z_C] / z1) / (float)(this->steps - 1);
+		deltavector.myvector[T_C] = 0.0f;
 		deltazinv = (1.0f / z2 - 1.0f / z1) / (float)(this->steps - 1);
 		z1inv = 1.0f / z1;
 	}
