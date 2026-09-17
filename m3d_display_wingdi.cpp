@@ -160,10 +160,9 @@ void m3d_display_wingdi::clear_renderer()
 
 void m3d_display_wingdi::draw_lines(struct m3d_display_point pts[], unsigned ptsnum)
 {
-	HPEN pen = CreatePen(PS_SOLID, 0, color);
-
-	if (SelectObject(hdcDIB, pen))
+	if (SelectObject(hdcDIB, GetStockObject(DC_PEN)))
 	{
+		SetDCPenColor(hdcDIB, color);
 		for (unsigned i = 0; i < ptsnum; i += 4)
 		{
 			MoveToEx(hdcDIB, pts[i].x, pts[i].y, NULL);
@@ -171,10 +170,6 @@ void m3d_display_wingdi::draw_lines(struct m3d_display_point pts[], unsigned pts
 			LineTo(hdcDIB, pts[i + 2].x, pts[i + 2].y);
 			LineTo(hdcDIB, pts[i + 3].x, pts[i + 3].y);
 		}
-	}
-	if (!DeleteObject(pen))
-	{
-		cerr << "Could not delete the pen!" << endl;
 	}
 }
 
