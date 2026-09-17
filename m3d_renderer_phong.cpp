@@ -106,7 +106,7 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d
 			if (zbuffer.test_update(outz, sl.value()))
 			{
 				m3d_vertex tmp;
-				tmp.tposition = (m3d_point &)pts.value();
+				tmp.tposition = static_cast<m3d_point &>(pts.value());
 				tmp.tnormal = norm.value();
 				m3d_illum::inst().ambient_lighting(tmp, obj, world, colors[0]);
 				m3d_illum::inst().diffuse_lighting(tmp, obj, world, colors[0]);
@@ -118,6 +118,7 @@ void m3d_renderer_shaded_phong::triangle_fill_shaded(m3d_render_object &obj, m3d
 			++outz;
 			sl.step();
 			norm.step();
+			pts.step();
 		}
 		lscanline++;
 		rscanline++;
