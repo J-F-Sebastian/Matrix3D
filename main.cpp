@@ -91,6 +91,21 @@ static LRESULT CALLBACK wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 		case '4': // 4
 			objcmd = &sphereo;
 			return 0;
+		case '5':
+			renderer_index = 0;
+			break;
+		case '6':
+			renderer_index = 1;
+			break;
+		case '7':
+			renderer_index = 2;
+			break;
+		case '8':
+			renderer_index = 3;
+			break;
+		case '9':
+			renderer_index = 4;
+			break;
 		case VK_RIGHT:
 			objcmd->yaw(stepping);
 			break;
